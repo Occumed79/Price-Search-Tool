@@ -37,7 +37,6 @@ minimumReleaseAgeExclude:
 packages:
   - artifacts/*
   - clinic-search
-  - api-server
   - lib/*
   - lib/integrations/*
   - scripts
