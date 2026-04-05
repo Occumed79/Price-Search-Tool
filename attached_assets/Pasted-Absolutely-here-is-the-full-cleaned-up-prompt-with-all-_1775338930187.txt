@@ -1,0 +1,426 @@
+Absolutely — here is the full cleaned-up prompt with all scoring and confidence language removed:
+
+```text
+Build a production-quality web app called “Posted Price Clinic Search.”
+
+CORE PURPOSE
+This tool must search for clinics and healthcare providers and return ONLY actual publicly posted prices for specific services from real websites. It must not show estimated prices, national averages, Medicare estimates, FAIR Health numbers, theoretical ranges, or inferred prices in the main results. The main search results must be based only on real posted prices found on websites.
+
+STRICT PRODUCT RULES
+1. Never invent a price.
+2. Never show a calculated or theoretical number in the main results.
+3. If no actual posted public price is found, say exactly:
+   “No actual posted public price found.”
+4. Every returned price must include:
+   - clinic/provider/platform name
+   - clinic type
+   - requested service
+   - exact posted price text
+   - source URL
+   - snippet around the matched price
+   - source type
+   - date/time found
+5. Distinguish source types:
+   - direct clinic website
+   - official clinic chain location page
+   - marketplace/platform listing
+   - PDF fee schedule
+   - rendered JS page
+   - weak third-party reference
+6. Direct clinic websites should be ranked above marketplaces and third-party platforms.
+7. If the result is not backed by visible evidence, do not show it as a price result.
+
+PRIMARY USER GOAL
+A user enters:
+- city/state or ZIP
+- optional radius
+- clinic type
+- service type / search phrase
+
+The app returns clinics with actual posted prices for that specific service, filtered by clinic type.
+
+DESIGN REQUIREMENT: MACOS TAHOE GLASS UI
+The entire UI must use a polished MacOS Tahoe Glass-inspired design language:
+- translucent frosted glass panels
+- soft layered blur
+- liquid-glass cards and modals
+- subtle internal highlights and reflections
+- soft blue / cyan / white accents with optional green for confirmed hits
+- elegant dark mode by default
+- thin separators, rounded corners, floating panels
+- lightweight spring animations and smooth hover glow
+- refined sidebar + command bar layout
+- clean, premium, uncluttered visual hierarchy
+- map/search/results panels should look like floating glass panes over a deep atmospheric background
+- use glassmorphism tastefully, not tacky
+- prioritize readability even with translucent surfaces
+
+MAIN SEARCH UX
+The main interface must include:
+- location input
+- radius selector
+- clinic type filter
+- service type filter
+- optional free-text search
+- “posted prices only” toggle ON by default
+- “direct clinic websites only” toggle
+- “include PDFs” toggle
+- “include marketplace listings” toggle
+- “verified evidence only” toggle
+- sort by:
+  - lowest actual posted price
+  - distance
+  - source type
+  - clinic type match
+
+CLINIC TYPE FILTERS
+Support:
+- urgent care
+- occupational health
+- primary care
+- dental
+- cardiology
+- radiology / imaging
+- pharmacy
+- aviation medical / FAA
+- lab / diagnostics
+- women’s health
+- physical therapy
+- specialist
+- hospital outpatient
+- FQHC
+- other
+
+SERVICE FILTERS / SEARCH PHRASES
+Support both presets and arbitrary search phrases.
+
+Presets:
+- urgent care visit
+- office visit
+- self-pay visit
+- physical exam
+- annual physical
+- DOT physical
+- FAA medical exam
+- dental exam
+- dental cleaning
+- panoramic x-ray
+- bitewings
+- mammogram
+- treadmill stress test
+- EKG
+- spirometry
+- audiogram
+- vaccine / immunization
+- TB test
+- drug screen
+- lab panel
+
+SEARCH BEHAVIOR
+This is not a generic web search tool. It is a surgical evidence search tool.
+
+The system must:
+1. Generate multiple targeted search queries for each request.
+2. Search by:
+   - clinic type + service + city/state
+   - self-pay variant
+   - cash price variant
+   - fee schedule variant
+   - price PDF variant
+   - location page variant
+   - chain pricing page variant
+3. Detect clinic chains and try both:
+   - corporate pricing pages
+   - location-specific pages
+4. Search official clinic websites before broad marketplace results.
+5. Try to identify when a chain has public pricing but only on certain subpages.
+
+RESULT CATEGORIES
+Group results into 3 buckets:
+1. Posted price found
+2. Clinic found but no posted price found
+3. Weak / uncertain evidence
+
+Only bucket #1 should count as a true price hit.
+
+TECH STACK
+Use TypeScript end-to-end.
+
+Frontend:
+- React
+- Vite
+- Tailwind
+- premium MacOS Tahoe Glass design
+- strong search UX
+- excellent loading / status states
+
+Backend:
+- Node.js + Express
+- TypeScript
+
+Search / Extraction Pipeline:
+1. query builder
+2. search adapters
+3. page fetcher
+4. PDF fetcher
+5. Playwright renderer for JS-heavy pages
+6. extraction engine
+7. price evidence classifier
+8. result normalizer
+9. persistence layer
+
+ENV VAR SUPPORT
+Design with adapters for:
+- SERPER_API_KEY
+- TAVILY_API_KEY
+- GEMINI_API_KEY
+- OPENAI_API_KEY
+- FIRECRAWL_API_KEY
+
+The app must still run in degraded mode without all of them.
+
+CRAWLER / EXTRACTION REQUIREMENTS
+The tool must support:
+- raw HTML fetching
+- Playwright rendering when needed
+- PDF detection and parsing
+- extraction from visible text
+- table extraction
+- structured data extraction
+- JSON-LD extraction
+- title / headings / section detection
+- screenshot capture of source page
+- evidence snapshot creation
+
+PRICE DETECTION RULES
+The extraction engine must detect and preserve:
+- $95
+- $95.00
+- from $95
+- starting at $95
+- self-pay $95
+- cash price $95
+- urgent care visit $149
+- DOT physical $110
+- new patient exam $79
+- vaccine administration fee $25
+- ranges like $90-$120 only if clearly tied to the requested service
+
+Store:
+- raw matched price text
+- normalized min/max if possible
+- nearby text snippet
+- matched service phrase
+- page title
+- H1/H2 context
+- source classification
+- evidence screenshot path if captured
+
+FALSE POSITIVE FILTERS
+The tool must reject:
+- unrelated copays
+- unrelated product prices
+- general blog posts quoting average prices
+- insurance-only pricing not tied to requested service
+- “save $50” marketing text
+- pages that only say “call for pricing”
+- prices for the wrong service
+- pricing for membership plans unless clearly labeled
+- price mentions without meaningful service context
+
+KNOWN PRICE-TRANSPARENT DOMAINS
+Support a curated domain config for known transparent sources, but do not let them dominate better direct clinic results.
+
+Examples:
+- mdsave
+- sesamecare
+- solv
+- zocdoc only when price is visibly posted
+- cvs / minuteclinic
+- walgreens
+- concentra
+- carenow
+- newchoicehealth
+- other transparent clinic chains
+
+MACOS TAHOE UI LAYOUT
+Build the app like a premium desktop-style search workspace with:
+- left glass sidebar for filters
+- top floating command/search bar
+- main center results pane
+- optional right-side evidence drawer
+- floating glass map panel optional
+- persistent bottom debug / extraction status bar in debug mode
+- quick-action chips and elegant source badges
+- subtle animated loading states
+- visual emphasis on source quality and evidence quality
+
+RESULT CARD REQUIREMENTS
+Each result card must show:
+- clinic/provider name
+- clinic type
+- location
+- requested service
+- exact posted price
+- price snippet
+- source badge
+- source type badge
+- “open source page” button
+- “copy source URL” button
+- “view evidence” button
+- “save result” button
+
+EVIDENCE DRAWER / DETAIL MODAL
+For each result, provide a glass-style detail view showing:
+- full source URL
+- page title
+- matched text
+- all price hits found on the page
+- screenshot preview if available
+- whether raw HTML or Playwright was used
+- whether the source was PDF
+- extraction notes
+- why the result was included
+- manual verification toggle
+- user notes field
+
+DEBUG MODE
+Add a debug mode showing:
+- generated queries
+- search provider used
+- URLs searched
+- fetch status for each URL
+- HTTP status
+- whether rendered by Playwright
+- whether PDF was processed
+- extracted candidate prices before filtering
+- rejection reasons
+- source classification
+
+VERY IMPORTANT HELPFUL FEATURES
+Add these extra features because they will materially improve the usefulness of the tool:
+
+1. SOURCE EVIDENCE SCREENSHOT
+For every strong result, try to save a screenshot of the source page and visually highlight or annotate the matched price text.
+
+2. CLINIC FOUND / NO PRICE FOUND MODE
+Show clinics found in the area even when no posted price exists, but keep them in a clearly separate section labeled:
+“Clinic found, but no public price posted.”
+
+3. LOCATION-SPECIFIC MATCH BOOST
+If the search is Fresno, do not rank a general national pricing page above a Fresno-specific clinic/location page unless the Fresno page lacks pricing.
+
+4. SERVICE ALIAS ENGINE
+Support aliases such as:
+- treadmill stress test -> exercise stress test
+- physical exam -> annual physical / sports physical / pre-employment physical
+- dental exam -> new patient exam / comprehensive exam
+- DOT physical -> CDL exam / FMCSA physical
+- FAA medical -> aviation medical / AME exam
+
+5. CHAIN / LOCATION GROUPING
+If a provider has multiple nearby locations, group them intelligently but allow drilling into each location page separately.
+
+6. MANUAL VERIFY / TRUST WORKFLOW
+Allow the user to mark results as:
+- verified
+- questionable
+- wrong match
+- no longer posted
+This should improve future ranking locally.
+
+7. EXTRACTED TEXT VIEW
+Allow the user to inspect raw extracted snippets to understand why the tool matched something.
+
+8. SAVE SEARCHES
+Allow saving a search query and reopening it later.
+
+9. EXPORTS
+Support:
+- CSV export
+- JSON export
+- evidence pack export
+- printable PDF report of found posted prices
+
+10. EXCLUDE DOMAINS / PREFER DOMAINS
+Let the user blacklist or prefer domains.
+
+11. SERVICE-SPECIFIC TEMPLATES
+Offer quick templates like:
+- Urgent care cash visit
+- Dental new patient exam
+- DOT physical
+- FAA medical exam
+- Mammogram
+- Stress test
+- Vaccine administration
+
+12. SEARCH MEMORY
+Remember recent searches, saved domains, and user review notes locally.
+
+13. EVIDENCE-ONLY MODE
+A stricter toggle that hides all results lacking strong visible price evidence.
+
+14. MULTI-TAB SOURCE OPENING
+Let the user open the top 5 source pages in one action for manual verification.
+
+DATABASE TABLES
+Create tables for:
+- search_runs
+- result_sources
+- extracted_price_hits
+- saved_results
+- search_presets
+- domain_rules
+- service_aliases
+- manual_reviews
+
+API ENDPOINTS
+Create:
+- POST /api/search
+- GET /api/search/:id
+- GET /api/results/:id
+- POST /api/save-result
+- POST /api/manual-review
+- GET /api/domain-rules
+- POST /api/domain-rules
+- POST /api/debug/reprocess
+- GET /api/export/:searchId
+
+BUILD QUALITY
+- modular architecture
+- typed interfaces
+- reusable extraction services
+- graceful error handling
+- rate-limit aware
+- partial results are okay
+- do not crash if one site fails
+- clean logs
+- polished UI
+
+CRITICAL UX COPY
+If nothing real is found, display:
+“No actual posted public prices were found for this search.”
+Below that, optionally show:
+- clinics found with no public price
+- direct links for manual review
+But do not fabricate any price.
+
+DELIVERABLE
+Build a working MVP inside Replit that includes:
+- frontend
+- backend
+- premium MacOS Tahoe Glass UI
+- search engine
+- extraction pipeline
+- Playwright support
+- PDF support
+- evidence screenshots
+- saved results
+- debug mode
+- manual review workflow
+- export support
+- README with setup instructions and env vars
+```
+
+One thing I’d still tweak a bit before you use it: I would probably also change “weak / uncertain evidence” to something softer like “possible match” so Replit doesn’t accidentally rebuild scoring language back in.
