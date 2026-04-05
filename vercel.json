@@ -1,0 +1,5 @@
+{
+  "buildCommand": "pnpm --filter @workspace/clinic-search build",
+  "outputDirectory": "clinic-search/dist/public",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
