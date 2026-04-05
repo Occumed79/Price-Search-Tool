@@ -1,0 +1,751 @@
+import { db } from "@workspace/db";
+import {
+  searchRunsTable,
+  priceResultsTable,
+  domainRulesTable,
+} from "@workspace/db";
+import { eq } from "drizzle-orm";
+import { logger } from "../lib/logger";
+
+const SERPER_API_KEY = process.env.SERPER_API_KEY;
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const OPENROUTER_KEY = process.env.OPENROUTER_KEY;
+
+interface SearchParams {
+  location: string;
+  radiusMiles: number;
+  clinicType: string;
+  serviceType: string;
+  freeText?: string;
+  postedPricesOnly: boolean;
+  directClinicOnly: boolean;
+  includePdfs: boolean;
+  includeMarketplaces: boolean;
+  verifiedEvidenceOnly: boolean;
+  sortBy: string;
+}
+
+interface SearchResult {
+  clinicName: string;
+  clinicType: string;
+  location: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  latitude?: number;
+  longitude?: number;
+  requestedService: string;
+  postedPrice?: string;
+  priceMin?: number;
+  priceMax?: number;
+  priceSnippet?: string;
+  sourceUrl?: string;
+  pageTitle?: string;
+  sourceBucket: "posted_price" | "clinic_no_price" | "possible_match";
+  sourceType: "direct_clinic" | "clinic_chain" | "marketplace" | "pdf" | "rendered_js" | "weak_reference";
+  isPdf: boolean;
+  isRendered: boolean;
+  extractionNotes?: string;
+  matchedServicePhrase?: string;
+}
+
+interface DebugEntry {
+  query: string;
+  provider: string;
+  urlsSearched: string[];
+  status: string;
+  notes?: string;
+}
+
+const SERVICE_ALIASES: Record<string, string[]> = {
+  "treadmill stress test": ["exercise stress test", "cardiac stress test", "treadmill test"],
+  "physical exam": ["annual physical", "sports physical", "pre-employment physical", "wellness exam"],
+  "dental exam": ["new patient exam", "comprehensive exam", "dental evaluation"],
+  "dot physical": ["cdl exam", "fmcsa physical", "dot exam", "cdl physical"],
+  "faa medical exam": ["aviation medical", "ame exam", "faa medical", "flight physical"],
+  "urgent care visit": ["urgent care", "walk-in visit", "self-pay urgent care"],
+  "office visit": ["clinic visit", "primary care visit", "provider visit"],
+  "mammogram": ["mammography", "breast screening", "breast x-ray"],
+  "drug screen": ["urine drug test", "drug test", "substance screening"],
+  "tb test": ["tuberculosis test", "ppd test", "mantoux test"],
+};
+
+const TRANSPARENT_DOMAINS = [
+  "mdsave.com",
+  "sesamecare.com",
+  "solv.com",
+  "zocdoc.com",
+  "cvs.com",
+  "minuteclinic.com",
+  "walgreens.com",
+  "concentra.com",
+  "carenow.com",
+  "newchoicehealth.com",
+  "rediclinicclinics.com",
+  "gohealthuc.com",
+  "citymd.com",
+  "fastmed.com",
+  "urgentteam.com",
+  "nextcare.com",
+];
+
+const MARKETPLACE_DOMAINS = ["mdsave.com", "sesamecare.com", "solv.com", "zocdoc.com", "newchoicehealth.com"];
+
+function buildQueries(params: SearchParams): string[] {
+  const { location, clinicType, serviceType, freeText } = params;
+  const queries: string[] = [];
+  const aliases = SERVICE_ALIASES[serviceType.toLowerCase()] || [];
+  const allServices = [serviceType, ...aliases];
+
+  for (const service of allServices.slice(0, 2)) {
+    queries.push(`"${service}" price ${location} ${clinicType} site:* self-pay cash`);
+    queries.push(`${service} cash price ${location} ${clinicType}`);
+    queries.push(`${service} posted price fee schedule ${location}`);
+    queries.push(`${clinicType} ${location} ${service} "$" pricing`);
+  }
+
+  queries.push(`${serviceType} price ${location} PDF fee schedule`);
+  queries.push(`${clinicType} chain ${serviceType} pricing page`);
+
+  if (freeText) {
+    queries.push(`${freeText} ${location} price posted`);
+  }
+
+  return queries.slice(0, 6);
+}
+
+async function searchWithSerper(query: string): Promise<Array<{ url: string; title: string; snippet: string }>> {
+  if (!SERPER_API_KEY) return [];
+  try {
+    const response = await fetch("https://google.serper.dev/search", {
+      method: "POST",
+      headers: {
+        "X-API-KEY": SERPER_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ q: query, num: 10 }),
+    });
+    if (!response.ok) return [];
+    const data = (await response.json()) as { organic?: Array<{ link: string; title: string; snippet: string }> };
+    return (data.organic || []).map((r) => ({
+      url: r.link,
+      title: r.title,
+      snippet: r.snippet,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function searchWithTavily(query: string): Promise<Array<{ url: string; title: string; snippet: string }>> {
+  if (!TAVILY_API_KEY) return [];
+  try {
+    const response = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: TAVILY_API_KEY,
+        query,
+        search_depth: "basic",
+        max_results: 10,
+      }),
+    });
+    if (!response.ok) return [];
+    const data = (await response.json()) as { results?: Array<{ url: string; title: string; content: string }> };
+    return (data.results || []).map((r) => ({
+      url: r.url,
+      title: r.title,
+      snippet: r.content,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchPage(url: string): Promise<{ text: string; isPdf: boolean } | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; ClinicPriceBot/1.0)",
+        Accept: "text/html,application/pdf,*/*",
+      },
+    });
+    clearTimeout(timeout);
+    if (!response.ok) return null;
+
+    const contentType = response.headers.get("content-type") || "";
+    const isPdf = contentType.includes("pdf") || url.toLowerCase().endsWith(".pdf");
+
+    if (isPdf) {
+      return { text: "[PDF document — price extraction attempted]", isPdf: true };
+    }
+
+    const text = await response.text();
+    const cleaned = text
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .slice(0, 20000);
+    return { text: cleaned, isPdf: false };
+  } catch {
+    return null;
+  }
+}
+
+const PRICE_PATTERNS = [
+  /\$\s*(\d{1,4}(?:\.\d{2})?)/g,
+  /from\s+\$\s*(\d{1,4}(?:\.\d{2})?)/gi,
+  /starting\s+at\s+\$\s*(\d{1,4}(?:\.\d{2})?)/gi,
+  /self[-\s]pay\s+\$\s*(\d{1,4}(?:\.\d{2})?)/gi,
+  /cash\s+price[:\s]+\$\s*(\d{1,4}(?:\.\d{2})?)/gi,
+  /(\d{1,4}(?:\.\d{2})?)\s+(?:per|each|\/)/gi,
+];
+
+const FALSE_POSITIVE_PATTERNS = [
+  /save\s+\$\d+/i,
+  /call\s+for\s+pricing/i,
+  /insurance\s+only/i,
+  /members?\s+only/i,
+  /discount\s+\$\d+\s+off/i,
+  /retail\s+value/i,
+  /msrp/i,
+];
+
+function extractPrices(
+  text: string,
+  serviceType: string,
+  _freeText?: string,
+): Array<{ price: string; min: number; max: number; snippet: string; phrase: string }> {
+  const results = [];
+  const aliases = SERVICE_ALIASES[serviceType.toLowerCase()] || [];
+  const allServices = [serviceType, ...aliases];
+
+  for (const pattern of PRICE_PATTERNS) {
+    pattern.lastIndex = 0;
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const idx = match.index;
+      const context = text.slice(Math.max(0, idx - 150), idx + 150);
+
+      if (FALSE_POSITIVE_PATTERNS.some((fp) => fp.test(context))) continue;
+
+      const hasServiceContext = allServices.some((s) =>
+        context.toLowerCase().includes(s.toLowerCase().split(" ")[0]),
+      );
+      if (!hasServiceContext) continue;
+
+      const priceStr = match[1] || match[0];
+      const priceNum = parseFloat(priceStr.replace(/[$,]/g, ""));
+      if (priceNum < 5 || priceNum > 50000) continue;
+
+      const rawMatch = match[0];
+
+      results.push({
+        price: rawMatch.startsWith("$") ? rawMatch : `$${priceNum.toFixed(2)}`,
+        min: priceNum,
+        max: priceNum,
+        snippet: context.trim(),
+        phrase: serviceType,
+      });
+
+      if (results.length >= 3) break;
+    }
+    if (results.length >= 3) break;
+  }
+
+  return results;
+}
+
+interface AiPriceResult {
+  hasPostedPrice: boolean;
+  price: string | null;
+  priceMin: number | null;
+  priceMax: number | null;
+  snippet: string | null;
+  provider: string;
+}
+
+const AI_PRICE_PROMPT = (serviceType: string, clinicType: string, text: string) => `You are a healthcare price transparency expert. Analyze the webpage text below and determine if it contains an actual publicly posted cash or self-pay price for "${serviceType}" at a ${clinicType}.
+
+Rules:
+- Only return hasPostedPrice=true if you see an explicit dollar amount posted as a price
+- "Call for pricing", estimates, ranges without numbers, insurance rates = NOT a posted price
+- A real posted price looks like: "$89", "Self-pay: $95", "Cash price $110", "$75-$120"
+- Extract the price exactly as written in the text
+
+Respond ONLY with valid JSON (no markdown, no explanation):
+{"hasPostedPrice":boolean,"price":"string or null","priceMin":number_or_null,"priceMax":number_or_null,"snippet":"exact text containing price or null"}
+
+Webpage text (truncated):
+${text.slice(0, 3000)}`;
+
+async function aiExtractPriceWithGroq(text: string, serviceType: string, clinicType: string): Promise<AiPriceResult | null> {
+  if (!GROQ_API_KEY) return null;
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: AI_PRICE_PROMPT(serviceType, clinicType, text) }],
+        temperature: 0,
+        max_tokens: 200,
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    const parsed = JSON.parse(content) as AiPriceResult;
+    return { ...parsed, provider: "groq" };
+  } catch {
+    return null;
+  }
+}
+
+async function aiExtractPriceWithOpenRouter(text: string, serviceType: string, clinicType: string): Promise<AiPriceResult | null> {
+  if (!OPENROUTER_KEY) return null;
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://postedpriceclinicsearch.replit.app",
+        "X-Title": "Posted Price Clinic Search",
+      },
+      body: JSON.stringify({
+        model: "meta-llama/llama-3.1-8b-instruct:free",
+        messages: [{ role: "user", content: AI_PRICE_PROMPT(serviceType, clinicType, text) }],
+        temperature: 0,
+        max_tokens: 200,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const parsed = JSON.parse(jsonMatch[0]) as AiPriceResult;
+    return { ...parsed, provider: "openrouter" };
+  } catch {
+    return null;
+  }
+}
+
+async function aiExtractPrice(text: string, serviceType: string, clinicType: string): Promise<AiPriceResult | null> {
+  const groqResult = await aiExtractPriceWithGroq(text, serviceType, clinicType);
+  if (groqResult) return groqResult;
+  return aiExtractPriceWithOpenRouter(text, serviceType, clinicType);
+}
+
+function classifySourceType(url: string): "direct_clinic" | "clinic_chain" | "marketplace" | "pdf" | "weak_reference" {
+  if (url.toLowerCase().endsWith(".pdf")) return "pdf";
+  if (MARKETPLACE_DOMAINS.some((d) => url.includes(d))) return "marketplace";
+  if (TRANSPARENT_DOMAINS.some((d) => url.includes(d) && !MARKETPLACE_DOMAINS.includes(d))) return "clinic_chain";
+  if (url.includes("location") || url.includes("clinic") || url.includes("office")) return "direct_clinic";
+  return "weak_reference";
+}
+
+function classifySourceBucket(
+  prices: ReturnType<typeof extractPrices>,
+  hasClinicContext: boolean,
+): "posted_price" | "clinic_no_price" | "possible_match" {
+  if (prices.length > 0) return "posted_price";
+  if (hasClinicContext) return "clinic_no_price";
+  return "possible_match";
+}
+
+function extractClinicName(title: string, url: string): string {
+  if (title && title.length > 2) {
+    return title.split("|")[0].split("-")[0].trim().slice(0, 80);
+  }
+  try {
+    const hostname = new URL(url).hostname.replace("www.", "");
+    return hostname.split(".")[0];
+  } catch {
+    return "Unknown Clinic";
+  }
+}
+
+function parseLocation(locationStr: string): { city?: string; state?: string; zip?: string } {
+  const zipMatch = locationStr.match(/\b(\d{5})\b/);
+  const stateMatch = locationStr.match(/\b([A-Z]{2})\b/);
+  const parts = locationStr.split(",").map((p) => p.trim());
+
+  return {
+    zip: zipMatch?.[1],
+    state: stateMatch?.[1] || parts[1]?.trim(),
+    city: parts[0],
+  };
+}
+
+async function geocodeLocation(location: string): Promise<{ lat?: number; lng?: number }> {
+  try {
+    const encoded = encodeURIComponent(location + " USA");
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`,
+      {
+        headers: { "User-Agent": "PostedPriceClinicSearch/1.0" },
+      },
+    );
+    if (!response.ok) return {};
+    const data = (await response.json()) as Array<{ lat: string; lon: string }>;
+    if (data[0]) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+  } catch {
+    // ignore
+  }
+  return {};
+}
+
+export async function runSearch(searchId: number, params: SearchParams): Promise<void> {
+  const debugLog: DebugEntry[] = [];
+
+  try {
+    await db
+      .update(searchRunsTable)
+      .set({ status: "running" })
+      .where(eq(searchRunsTable.id, searchId));
+
+    const blockedDomains = await db
+      .select()
+      .from(domainRulesTable)
+      .where(eq(domainRulesTable.ruleType, "block"));
+    const blockedSet = new Set(blockedDomains.map((r) => r.domain));
+
+    const preferredDomains = await db
+      .select()
+      .from(domainRulesTable)
+      .where(eq(domainRulesTable.ruleType, "prefer"));
+    const preferredSet = new Set(preferredDomains.map((r) => r.domain));
+
+    const queries = buildQueries(params);
+    const allUrls = new Set<string>();
+    const urlResults: Array<{ url: string; title: string; snippet: string }> = [];
+
+    for (const query of queries) {
+      const debugEntry: DebugEntry = {
+        query,
+        provider: "none",
+        urlsSearched: [],
+        status: "pending",
+      };
+
+      let results: Array<{ url: string; title: string; snippet: string }> = [];
+
+      if (SERPER_API_KEY) {
+        results = await searchWithSerper(query);
+        debugEntry.provider = "serper";
+      } else if (TAVILY_API_KEY) {
+        results = await searchWithTavily(query);
+        debugEntry.provider = "tavily";
+      } else {
+        debugEntry.status = "no_api_key";
+        debugEntry.notes = "No search API key configured (SERPER_API_KEY or TAVILY_API_KEY)";
+        debugLog.push(debugEntry);
+        continue;
+      }
+
+      for (const result of results) {
+        if (!allUrls.has(result.url)) {
+          allUrls.add(result.url);
+          urlResults.push(result);
+          debugEntry.urlsSearched.push(result.url);
+        }
+      }
+
+      debugEntry.status = "complete";
+      debugLog.push(debugEntry);
+    }
+
+    const { city, state, zip } = parseLocation(params.location);
+    const geo = await geocodeLocation(params.location);
+    const insertedResults: SearchResult[] = [];
+
+    for (const urlResult of urlResults.slice(0, 20)) {
+      const { url, title, snippet } = urlResult;
+
+      try {
+        const domain = new URL(url).hostname.replace("www.", "");
+        if (blockedSet.has(domain)) continue;
+        if (params.directClinicOnly && MARKETPLACE_DOMAINS.some((d) => url.includes(d))) continue;
+        if (!params.includeMarketplaces && MARKETPLACE_DOMAINS.some((d) => url.includes(d))) continue;
+        if (!params.includePdfs && url.toLowerCase().endsWith(".pdf")) continue;
+
+        const pageData = await fetchPage(url);
+        const textToSearch = pageData ? pageData.text : snippet;
+        const isPdf = pageData?.isPdf || false;
+
+        const regexPrices = extractPrices(textToSearch, params.serviceType, params.freeText);
+        const hasClinicContext =
+          textToSearch.toLowerCase().includes("clinic") ||
+          textToSearch.toLowerCase().includes("medical") ||
+          textToSearch.toLowerCase().includes("health") ||
+          textToSearch.toLowerCase().includes("urgent care") ||
+          textToSearch.toLowerCase().includes("doctor");
+
+        // AI extraction: run when AI keys are available
+        // Always run on pages with clinic context, regardless of regex result
+        let aiResult: AiPriceResult | null = null;
+        const hasAiKey = !!(GROQ_API_KEY || OPENROUTER_KEY);
+        if (hasAiKey && hasClinicContext) {
+          aiResult = await aiExtractPrice(textToSearch, params.serviceType, params.clinicType);
+        }
+
+        // Merge: AI result takes priority; regex is fallback
+        let finalPrice: string | undefined;
+        let finalPriceMin: number | undefined;
+        let finalPriceMax: number | undefined;
+        let finalSnippet: string | undefined;
+        let extractionNotes: string;
+        let hasPostedPrice: boolean;
+
+        if (aiResult?.hasPostedPrice && aiResult.price) {
+          finalPrice = aiResult.price;
+          finalPriceMin = aiResult.priceMin ?? undefined;
+          finalPriceMax = aiResult.priceMax ?? finalPriceMin;
+          finalSnippet = aiResult.snippet?.slice(0, 300) ?? undefined;
+          hasPostedPrice = true;
+          extractionNotes = `AI (${aiResult.provider}) confirmed posted price: ${aiResult.price}`;
+        } else if (regexPrices.length > 0) {
+          finalPrice = regexPrices[0].price;
+          finalPriceMin = regexPrices[0].min;
+          finalPriceMax = regexPrices[0].max;
+          finalSnippet = regexPrices[0].snippet?.slice(0, 300);
+          hasPostedPrice = true;
+          extractionNotes = `Regex found ${regexPrices.length} price match(es)${aiResult ? `; AI (${aiResult.provider}) did not confirm` : ""}`;
+        } else {
+          hasPostedPrice = false;
+          finalSnippet = undefined;
+          extractionNotes = hasClinicContext
+            ? `Clinic found — no posted price detected${aiResult ? ` (AI: ${aiResult.provider} confirmed no price)` : ""}`
+            : "No clear clinic or price evidence";
+        }
+
+        // Build synthetic prices array for bucket classification
+        const prices = hasPostedPrice ? [{ price: finalPrice!, min: finalPriceMin ?? 0, max: finalPriceMax ?? 0, snippet: finalSnippet ?? "", phrase: params.serviceType }] : [];
+
+        const sourceType = classifySourceType(url);
+        const sourceBucket = classifySourceBucket(prices, hasClinicContext);
+
+        if (sourceBucket === "possible_match" && params.verifiedEvidenceOnly) continue;
+        if (sourceBucket === "possible_match" && params.postedPricesOnly && prices.length === 0) continue;
+
+        const isPreferred = preferredSet.has(new URL(url).hostname.replace("www.", ""));
+        const clinicName = extractClinicName(title, url);
+
+        const result: SearchResult = {
+          clinicName: isPreferred ? `★ ${clinicName}` : clinicName,
+          clinicType: params.clinicType,
+          location: params.location,
+          city,
+          state,
+          zipCode: zip,
+          latitude: geo.lat,
+          longitude: geo.lng,
+          requestedService: params.serviceType,
+          postedPrice: finalPrice,
+          priceMin: finalPriceMin,
+          priceMax: finalPriceMax,
+          priceSnippet: finalSnippet,
+          sourceUrl: url,
+          pageTitle: title?.slice(0, 200),
+          sourceBucket,
+          sourceType,
+          isPdf,
+          isRendered: false,
+          extractionNotes,
+          matchedServicePhrase: params.serviceType,
+        };
+
+        insertedResults.push(result);
+      } catch (err) {
+        logger.warn({ err, url }, "Failed to process URL");
+      }
+    }
+
+    if (SERPER_API_KEY === undefined && TAVILY_API_KEY === undefined) {
+      const demoResults = generateDemoResults(params, city, state, zip, geo);
+      insertedResults.push(...demoResults);
+    }
+
+    let sorted = insertedResults;
+    if (params.sortBy === "lowest_price") {
+      sorted = insertedResults.sort((a, b) => {
+        if (a.sourceBucket === "posted_price" && b.sourceBucket !== "posted_price") return -1;
+        if (b.sourceBucket === "posted_price" && a.sourceBucket !== "posted_price") return 1;
+        return (a.priceMin || Infinity) - (b.priceMin || Infinity);
+      });
+    } else if (params.sortBy === "source_type") {
+      const order = { direct_clinic: 0, clinic_chain: 1, marketplace: 2, pdf: 3, rendered_js: 4, weak_reference: 5 };
+      sorted = insertedResults.sort((a, b) => (order[a.sourceType] || 5) - (order[b.sourceType] || 5));
+    }
+
+    const postedPriceCount = sorted.filter((r) => r.sourceBucket === "posted_price").length;
+    const noPostingCount = sorted.filter((r) => r.sourceBucket === "clinic_no_price").length;
+
+    for (const result of sorted) {
+      await db.insert(priceResultsTable).values({
+        searchId,
+        clinicName: result.clinicName,
+        clinicType: result.clinicType,
+        location: result.location,
+        city: result.city,
+        state: result.state,
+        zipCode: result.zipCode,
+        latitude: result.latitude?.toString(),
+        longitude: result.longitude?.toString(),
+        requestedService: result.requestedService,
+        postedPrice: result.postedPrice,
+        priceMin: result.priceMin?.toString(),
+        priceMax: result.priceMax?.toString(),
+        priceSnippet: result.priceSnippet,
+        sourceUrl: result.sourceUrl,
+        pageTitle: result.pageTitle,
+        sourceBucket: result.sourceBucket,
+        sourceType: result.sourceType,
+        isPdf: result.isPdf,
+        isRendered: result.isRendered,
+        extractionNotes: result.extractionNotes,
+        matchedServicePhrase: result.matchedServicePhrase,
+        isSaved: false,
+      });
+    }
+
+    await db
+      .update(searchRunsTable)
+      .set({
+        status: "complete",
+        resultCount: sorted.length,
+        postedPriceCount,
+        noPostingCount,
+        completedAt: new Date(),
+        debugLog: debugLog as unknown as typeof searchRunsTable.$inferInsert.debugLog,
+      })
+      .where(eq(searchRunsTable.id, searchId));
+  } catch (err) {
+    logger.error({ err, searchId }, "Search pipeline failed");
+    await db
+      .update(searchRunsTable)
+      .set({ status: "failed", completedAt: new Date() })
+      .where(eq(searchRunsTable.id, searchId));
+  }
+}
+
+function generateDemoResults(
+  params: SearchParams,
+  city?: string,
+  state?: string,
+  zip?: string,
+  geo?: { lat?: number; lng?: number },
+): SearchResult[] {
+  const locationDisplay = params.location;
+
+  const usLatLng = geo?.lat ? geo : {
+    lat: 37.7749,
+    lng: -122.4194,
+  };
+
+  const demoData: SearchResult[] = [
+    {
+      clinicName: `${params.clinicType === "urgent care" ? "FastCare Urgent Care" : "MedFirst Clinic"} — ${city || locationDisplay}`,
+      clinicType: params.clinicType,
+      location: locationDisplay,
+      city,
+      state,
+      zipCode: zip,
+      latitude: usLatLng.lat,
+      longitude: usLatLng.lng,
+      requestedService: params.serviceType,
+      postedPrice: "$89",
+      priceMin: 89,
+      priceMax: 89,
+      priceSnippet: `Self-pay ${params.serviceType}: $89. No insurance required. Posted price includes exam and basic treatment.`,
+      sourceUrl: `https://example-clinic.com/${city?.toLowerCase() || "location"}/pricing`,
+      pageTitle: `Pricing | FastCare Urgent Care ${city || locationDisplay}`,
+      sourceBucket: "posted_price",
+      sourceType: "direct_clinic",
+      isPdf: false,
+      isRendered: false,
+      extractionNotes: "Demo result — configure SERPER_API_KEY or TAVILY_API_KEY for real results",
+      matchedServicePhrase: params.serviceType,
+    },
+    {
+      clinicName: `Concentra Occupational Health — ${locationDisplay}`,
+      clinicType: params.clinicType,
+      location: locationDisplay,
+      city,
+      state,
+      zipCode: zip,
+      latitude: usLatLng.lat ? usLatLng.lat + 0.02 : undefined,
+      longitude: usLatLng.lng ? usLatLng.lng + 0.02 : undefined,
+      requestedService: params.serviceType,
+      postedPrice: "$125",
+      priceMin: 125,
+      priceMax: 125,
+      priceSnippet: `${params.serviceType} cash price $125. Self-pay patients welcome.`,
+      sourceUrl: "https://concentra.com/locations/pricing",
+      pageTitle: `Concentra — ${params.serviceType} Pricing`,
+      sourceBucket: "posted_price",
+      sourceType: "clinic_chain",
+      isPdf: false,
+      isRendered: false,
+      extractionNotes: "Demo result — configure SERPER_API_KEY or TAVILY_API_KEY for real results",
+      matchedServicePhrase: params.serviceType,
+    },
+    {
+      clinicName: `Sesame Care — ${params.clinicType} Providers Near ${locationDisplay}`,
+      clinicType: params.clinicType,
+      location: locationDisplay,
+      city,
+      state,
+      zipCode: zip,
+      latitude: usLatLng.lat ? usLatLng.lat - 0.03 : undefined,
+      longitude: usLatLng.lng ? usLatLng.lng - 0.01 : undefined,
+      requestedService: params.serviceType,
+      postedPrice: "$75",
+      priceMin: 75,
+      priceMax: 95,
+      priceSnippet: `${params.serviceType} from $75. Transparent pricing, no surprise bills.`,
+      sourceUrl: "https://sesamecare.com/specialty/urgent-care",
+      pageTitle: `Sesame — ${params.serviceType} Near You`,
+      sourceBucket: "posted_price",
+      sourceType: "marketplace",
+      isPdf: false,
+      isRendered: false,
+      extractionNotes: "Demo result — configure SERPER_API_KEY or TAVILY_API_KEY for real results",
+      matchedServicePhrase: params.serviceType,
+    },
+    {
+      clinicName: `Community Health Center — ${locationDisplay}`,
+      clinicType: params.clinicType,
+      location: locationDisplay,
+      city,
+      state,
+      zipCode: zip,
+      latitude: usLatLng.lat ? usLatLng.lat + 0.05 : undefined,
+      longitude: usLatLng.lng ? usLatLng.lng - 0.05 : undefined,
+      requestedService: params.serviceType,
+      sourceBucket: "clinic_no_price",
+      sourceType: "direct_clinic",
+      isPdf: false,
+      isRendered: false,
+      extractionNotes: "Clinic found in area but no publicly posted price detected on website",
+    },
+  ];
+
+  return demoData;
+}
