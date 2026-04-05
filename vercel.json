@@ -1,4 +1,5 @@
 {
+  "framework": null,
   "installCommand": "pnpm install --no-frozen-lockfile",
   "buildCommand": "NODE_ENV=production pnpm --filter @workspace/clinic-search build",
   "outputDirectory": "clinic-search/dist/public",
