@@ -1,0 +1,770 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Posted Price Clinic Search API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: search
+    description: Search operations
+  - name: results
+    description: Result operations
+  - name: saved
+    description: Saved results
+  - name: domain-rules
+    description: Domain rule management
+  - name: presets
+    description: Search presets
+  - name: export
+    description: Export operations
+  - name: stats
+    description: Statistics
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /search:
+    post:
+      operationId: startSearch
+      tags: [search]
+      summary: Start a new clinic price search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Search started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchRun"
+
+  /search/{id}:
+    get:
+      operationId: getSearch
+      tags: [search]
+      summary: Get search run with results
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Search run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchRunWithResults"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /searches:
+    get:
+      operationId: listSearches
+      tags: [search]
+      summary: List recent searches
+      responses:
+        "200":
+          description: List of searches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SearchRun"
+
+  /save-result:
+    post:
+      operationId: saveResult
+      tags: [saved]
+      summary: Save a price result
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveResultRequest"
+      responses:
+        "200":
+          description: Saved result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedResult"
+
+  /saved-results:
+    get:
+      operationId: listSavedResults
+      tags: [saved]
+      summary: List all saved results
+      responses:
+        "200":
+          description: Saved results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedResult"
+
+  /saved-results/{id}:
+    delete:
+      operationId: deleteSavedResult
+      tags: [saved]
+      summary: Remove a saved result
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /manual-review:
+    post:
+      operationId: addManualReview
+      tags: [results]
+      summary: Add a manual review/tag to a result
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManualReviewRequest"
+      responses:
+        "200":
+          description: Review added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManualReview"
+
+  /domain-rules:
+    get:
+      operationId: listDomainRules
+      tags: [domain-rules]
+      summary: List all domain rules
+      responses:
+        "200":
+          description: Domain rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DomainRule"
+    post:
+      operationId: createDomainRule
+      tags: [domain-rules]
+      summary: Create a domain rule (prefer or block)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDomainRuleRequest"
+      responses:
+        "200":
+          description: Created rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DomainRule"
+
+  /domain-rules/{id}:
+    delete:
+      operationId: deleteDomainRule
+      tags: [domain-rules]
+      summary: Delete a domain rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /search-presets:
+    get:
+      operationId: listSearchPresets
+      tags: [presets]
+      summary: List saved search presets
+      responses:
+        "200":
+          description: Presets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SearchPreset"
+    post:
+      operationId: createSearchPreset
+      tags: [presets]
+      summary: Save a search preset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSearchPresetRequest"
+      responses:
+        "200":
+          description: Created preset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchPreset"
+
+  /search-presets/{id}:
+    delete:
+      operationId: deleteSearchPreset
+      tags: [presets]
+      summary: Delete a search preset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /export/{searchId}:
+    get:
+      operationId: exportResults
+      tags: [export]
+      summary: Export search results as JSON
+      parameters:
+        - name: searchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+      responses:
+        "200":
+          description: Exported data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportData"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get overall usage statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+
+  /results/{searchId}/map:
+    get:
+      operationId: getMapData
+      tags: [results]
+      summary: Get map-ready location data for search results
+      parameters:
+        - name: searchId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Map data with geocoded clinic locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MapPin"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
+    SearchRequest:
+      type: object
+      properties:
+        location:
+          type: string
+          description: City/state or ZIP code
+        radiusMiles:
+          type: integer
+          default: 25
+        clinicType:
+          type: string
+        serviceType:
+          type: string
+        freeText:
+          type: string
+        postedPricesOnly:
+          type: boolean
+          default: true
+        directClinicOnly:
+          type: boolean
+          default: false
+        includePdfs:
+          type: boolean
+          default: true
+        includeMarketplaces:
+          type: boolean
+          default: true
+        verifiedEvidenceOnly:
+          type: boolean
+          default: false
+        sortBy:
+          type: string
+          enum: [lowest_price, distance, source_type, clinic_type]
+          default: lowest_price
+      required:
+        - location
+        - clinicType
+        - serviceType
+
+    SearchRun:
+      type: object
+      properties:
+        id:
+          type: integer
+        location:
+          type: string
+        radiusMiles:
+          type: integer
+        clinicType:
+          type: string
+        serviceType:
+          type: string
+        freeText:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, complete, failed]
+        resultCount:
+          type: integer
+        postedPriceCount:
+          type: integer
+        noPostingCount:
+          type: integer
+        createdAt:
+          type: string
+        completedAt:
+          type: string
+      required:
+        - id
+        - location
+        - clinicType
+        - serviceType
+        - status
+        - resultCount
+        - postedPriceCount
+        - noPostingCount
+        - createdAt
+
+    SearchRunWithResults:
+      allOf:
+        - $ref: "#/components/schemas/SearchRun"
+        - type: object
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/PriceResult"
+            debugLog:
+              type: array
+              items:
+                $ref: "#/components/schemas/DebugEntry"
+          required:
+            - results
+
+    PriceResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        searchId:
+          type: integer
+        clinicName:
+          type: string
+        clinicType:
+          type: string
+        location:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zipCode:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        requestedService:
+          type: string
+        postedPrice:
+          type: string
+        priceMin:
+          type: number
+        priceMax:
+          type: number
+        priceSnippet:
+          type: string
+        sourceUrl:
+          type: string
+        pageTitle:
+          type: string
+        sourceBucket:
+          type: string
+          enum: [posted_price, clinic_no_price, possible_match]
+        sourceType:
+          type: string
+          enum: [direct_clinic, clinic_chain, marketplace, pdf, rendered_js, weak_reference]
+        isPdf:
+          type: boolean
+        isRendered:
+          type: boolean
+        screenshotPath:
+          type: string
+        extractionNotes:
+          type: string
+        matchedServicePhrase:
+          type: string
+        isSaved:
+          type: boolean
+        userReview:
+          type: string
+        foundAt:
+          type: string
+      required:
+        - id
+        - searchId
+        - clinicName
+        - clinicType
+        - requestedService
+        - sourceBucket
+        - sourceType
+        - isSaved
+        - foundAt
+
+    SaveResultRequest:
+      type: object
+      properties:
+        resultId:
+          type: integer
+        notes:
+          type: string
+      required:
+        - resultId
+
+    SavedResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        resultId:
+          type: integer
+        notes:
+          type: string
+        savedAt:
+          type: string
+        result:
+          $ref: "#/components/schemas/PriceResult"
+      required:
+        - id
+        - resultId
+        - savedAt
+
+    ManualReviewRequest:
+      type: object
+      properties:
+        resultId:
+          type: integer
+        verdict:
+          type: string
+          enum: [verified, questionable, wrong_match, no_longer_posted]
+        notes:
+          type: string
+      required:
+        - resultId
+        - verdict
+
+    ManualReview:
+      type: object
+      properties:
+        id:
+          type: integer
+        resultId:
+          type: integer
+        verdict:
+          type: string
+        notes:
+          type: string
+        reviewedAt:
+          type: string
+      required:
+        - id
+        - resultId
+        - verdict
+        - reviewedAt
+
+    DomainRule:
+      type: object
+      properties:
+        id:
+          type: integer
+        domain:
+          type: string
+        ruleType:
+          type: string
+          enum: [prefer, block]
+        reason:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - domain
+        - ruleType
+        - createdAt
+
+    CreateDomainRuleRequest:
+      type: object
+      properties:
+        domain:
+          type: string
+        ruleType:
+          type: string
+          enum: [prefer, block]
+        reason:
+          type: string
+      required:
+        - domain
+        - ruleType
+
+    SearchPreset:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        location:
+          type: string
+        radiusMiles:
+          type: integer
+        clinicType:
+          type: string
+        serviceType:
+          type: string
+        freeText:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - clinicType
+        - serviceType
+        - createdAt
+
+    CreateSearchPresetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+        radiusMiles:
+          type: integer
+        clinicType:
+          type: string
+        serviceType:
+          type: string
+        freeText:
+          type: string
+      required:
+        - name
+        - clinicType
+        - serviceType
+
+    ExportData:
+      type: object
+      properties:
+        searchId:
+          type: integer
+        exportedAt:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceResult"
+      required:
+        - searchId
+        - exportedAt
+        - results
+
+    Stats:
+      type: object
+      properties:
+        totalSearches:
+          type: integer
+        totalResults:
+          type: integer
+        totalPostedPrices:
+          type: integer
+        totalSaved:
+          type: integer
+        topServices:
+          type: array
+          items:
+            type: object
+            properties:
+              service:
+                type: string
+              count:
+                type: integer
+            required:
+              - service
+              - count
+        topLocations:
+          type: array
+          items:
+            type: object
+            properties:
+              location:
+                type: string
+              count:
+                type: integer
+            required:
+              - location
+              - count
+      required:
+        - totalSearches
+        - totalResults
+        - totalPostedPrices
+        - totalSaved
+        - topServices
+        - topLocations
+
+    DebugEntry:
+      type: object
+      properties:
+        query:
+          type: string
+        provider:
+          type: string
+        urlsSearched:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        notes:
+          type: string
+      required:
+        - query
+        - status
+
+    MapPin:
+      type: object
+      properties:
+        resultId:
+          type: integer
+        clinicName:
+          type: string
+        clinicType:
+          type: string
+        location:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        postedPrice:
+          type: string
+        sourceUrl:
+          type: string
+        sourceBucket:
+          type: string
+        isSaved:
+          type: boolean
+      required:
+        - resultId
+        - clinicName
+        - clinicType
+        - location
+        - sourceBucket
+        - isSaved
