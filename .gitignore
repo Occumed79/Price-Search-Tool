@@ -1,0 +1,5 @@
+node_modules/
+public/
+clinic-search/dist/
+api-server/dist/
+.env
