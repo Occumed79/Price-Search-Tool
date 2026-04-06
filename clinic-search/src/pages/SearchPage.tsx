@@ -10,6 +10,7 @@ import {
   getGetSearchQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSearch } from "wouter";
 import ResultCard from "@/components/ResultCard";
 import type { PriceResult } from "@workspace/api-client-react";
 
@@ -107,6 +108,21 @@ export default function SearchPage() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const searchString = useSearch();
+
+  // Load a past search when navigated to with ?search=<id> (e.g. from History page)
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const idParam = params.get("search");
+    if (idParam) {
+      const id = parseInt(idParam, 10);
+      if (!isNaN(id) && id !== currentSearchId) {
+        setCurrentSearchId(id);
+        setShouldPoll(false); // it's already complete — no need to poll
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchString]);
   const startSearch = useStartSearch();
   const saveResult = useSaveResult();
   const addReview = useAddManualReview();
@@ -115,9 +131,10 @@ export default function SearchPage() {
     currentSearchId!,
     {
       query: {
-        enabled: shouldPoll && currentSearchId !== null,
+        enabled: currentSearchId !== null,
         queryKey: getGetSearchQueryKey(currentSearchId!),
         refetchInterval: (query) => {
+          if (!shouldPoll) return false;
           const data = query.state.data;
           if (data?.status === "complete" || data?.status === "failed") {
             return false;
