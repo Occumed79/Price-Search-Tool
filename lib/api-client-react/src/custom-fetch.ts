@@ -153,12 +153,7 @@ function buildErrorMessage(response: Response, data: unknown): string {
 
   if (typeof data === "string") {
     const text = data.trim();
-    if (!text) return prefix;
-    // Strip raw HTML — show a clean message instead of markup
-    if (text.startsWith("<!") || text.startsWith("<html")) {
-      return `${prefix}: Server returned an unexpected HTML response. Check that the API URL is configured correctly.`;
-    }
-    return `${prefix}: ${truncate(text)}`;
+    return text ? `${prefix}: ${truncate(text)}` : prefix;
   }
 
   const title = getStringField(data, "title");
