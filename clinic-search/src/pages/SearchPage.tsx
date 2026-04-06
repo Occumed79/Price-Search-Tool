@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, MapPin, Filter, ChevronDown, Loader2, TriangleAlert, Download, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import {
   useStartSearch,
   useGetSearch,
@@ -105,7 +104,6 @@ export default function SearchPage() {
   const [showFilters, setShowFilters] = useState(true);
   const [debugMode] = useState(false);
 
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const startSearch = useStartSearch();
   const saveResult = useSaveResult();
@@ -134,17 +132,6 @@ export default function SearchPage() {
     }
   }, [searchQuery.data?.status]);
 
-  useEffect(() => {
-    if (searchQuery.isError) {
-      setShouldPoll(false);
-      const message =
-        searchQuery.error instanceof Error
-          ? searchQuery.error.message
-          : "Failed to retrieve search results. Please try again.";
-      toast({ title: "Search error", description: message, variant: "destructive" });
-    }
-  }, [searchQuery.isError, searchQuery.error, toast]);
-
   function update<K extends keyof SearchForm>(key: K, value: SearchForm[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
@@ -156,28 +143,24 @@ export default function SearchPage() {
     setShouldPoll(false);
     setCurrentSearchId(null);
 
-    try {
-      const run = await startSearch.mutateAsync({
-        data: {
-          location: form.location,
-          radiusMiles: form.radiusMiles,
-          clinicType: form.clinicType,
-          serviceType: form.serviceType,
-          freeText: form.freeText || undefined,
-          postedPricesOnly: form.postedPricesOnly,
-          directClinicOnly: form.directClinicOnly,
-          includePdfs: form.includePdfs,
-          includeMarketplaces: form.includeMarketplaces,
-          verifiedEvidenceOnly: form.verifiedEvidenceOnly,
-          sortBy: form.sortBy as "lowest_price" | "distance" | "source_type" | "clinic_type",
-        },
-      });
-      setCurrentSearchId(run.id);
-      setShouldPoll(true);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Search failed. Please try again.";
-      toast({ title: "Search failed", description: message, variant: "destructive" });
-    }
+    const run = await startSearch.mutateAsync({
+      data: {
+        location: form.location,
+        radiusMiles: form.radiusMiles,
+        clinicType: form.clinicType,
+        serviceType: form.serviceType,
+        freeText: form.freeText || undefined,
+        postedPricesOnly: form.postedPricesOnly,
+        directClinicOnly: form.directClinicOnly,
+        includePdfs: form.includePdfs,
+        includeMarketplaces: form.includeMarketplaces,
+        verifiedEvidenceOnly: form.verifiedEvidenceOnly,
+        sortBy: form.sortBy as "lowest_price" | "distance" | "source_type" | "clinic_type",
+      },
+    });
+
+    setCurrentSearchId(run.id);
+    setShouldPoll(true);
   }
 
   const handleSave = useCallback(async (resultId: number) => {
