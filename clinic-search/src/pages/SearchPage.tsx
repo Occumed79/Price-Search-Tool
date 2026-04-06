@@ -134,6 +134,17 @@ export default function SearchPage() {
     }
   }, [searchQuery.data?.status]);
 
+  useEffect(() => {
+    if (searchQuery.isError) {
+      setShouldPoll(false);
+      const message =
+        searchQuery.error instanceof Error
+          ? searchQuery.error.message
+          : "Failed to retrieve search results. Please try again.";
+      toast({ title: "Search error", description: message, variant: "destructive" });
+    }
+  }, [searchQuery.isError, searchQuery.error, toast]);
+
   function update<K extends keyof SearchForm>(key: K, value: SearchForm[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
