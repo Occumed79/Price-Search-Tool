@@ -1,8 +1,14 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import path from "path";
+import { fileURLToPath } from "url";
 import router from "./routes";
 import { logger } from "./lib/logger";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Static frontend is built to <repo-root>/public/ by the clinic-search build
+const staticDir = path.resolve(__dirname, "../../public");
 
 const app: Express = express();
 
@@ -31,9 +37,16 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
-// 404 handler — returns JSON instead of Express's default HTML
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({ error: "Not found" });
+// Serve the static frontend (built by clinic-search Vite build)
+app.use(express.static(staticDir));
+
+// SPA catch-all: serve index.html for any non-API route so client-side routing works
+app.get("*", (req: Request, res: Response) => {
+  if (req.path.startsWith("/api/")) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  res.sendFile(path.join(staticDir, "index.html"));
 });
 
 // Global error handler — returns JSON instead of Express's default HTML
