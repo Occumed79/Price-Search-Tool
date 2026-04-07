@@ -486,8 +486,9 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
         if (!params.includePdfs && url.toLowerCase().endsWith(".pdf")) continue;
 
         const pageData = await fetchPage(url);
-        const textToSearch = pageData ? pageData.text : snippet;
         const isPdf = pageData?.isPdf || false;
+        // For PDFs, fetchPage returns a placeholder — fall back to the search snippet instead
+        const textToSearch = (pageData && !isPdf) ? pageData.text : snippet;
 
         const regexPrices = extractPrices(textToSearch, params.serviceType, params.freeText);
         const hasClinicContext =
@@ -541,8 +542,8 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
         const sourceType = classifySourceType(url);
         const sourceBucket = classifySourceBucket(prices, hasClinicContext);
 
-        if (sourceBucket === "possible_match" && params.verifiedEvidenceOnly) continue;
-        if (sourceBucket === "possible_match" && params.postedPricesOnly && prices.length === 0) continue;
+        if (params.verifiedEvidenceOnly && sourceBucket !== "posted_price") continue;
+        if (params.postedPricesOnly && sourceBucket !== "posted_price") continue;
 
         const isPreferred = preferredSet.has(new URL(url).hostname.replace("www.", ""));
         const clinicName = extractClinicName(title, url);
