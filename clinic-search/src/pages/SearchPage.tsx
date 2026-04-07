@@ -9,6 +9,7 @@ import {
   getGetSearchQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import ResultCard from "@/components/ResultCard";
 import type { PriceResult } from "@workspace/api-client-react";
 
@@ -105,9 +106,24 @@ export default function SearchPage() {
   const [debugMode] = useState(false);
 
   const queryClient = useQueryClient();
+  const [location] = useLocation();
   const startSearch = useStartSearch();
   const saveResult = useSaveResult();
   const addReview = useAddManualReview();
+
+  // Load a past search when navigated to with ?search=<id> (e.g. from History page)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const idParam = params.get("search");
+    if (idParam) {
+      const id = parseInt(idParam, 10);
+      if (!isNaN(id) && id !== currentSearchId) {
+        setCurrentSearchId(id);
+        setShouldPoll(true); // let the existing poll logic fetch it once
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location]);
 
   const searchQuery = useGetSearch(
     currentSearchId!,
