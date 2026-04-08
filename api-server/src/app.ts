@@ -41,7 +41,7 @@ app.use("/api", router);
 app.use(express.static(staticDir));
 
 // SPA catch-all: serve index.html for any non-API route so client-side routing works
-app.get("*", (req: Request, res: Response) => {
+app.get("/{*path}", (req: Request, res: Response) => {
   if (req.path.startsWith("/api/")) {
     res.status(404).json({ error: "Not found" });
     return;
