@@ -3,7 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm } from "node:fs/promises";
+import { rm, access } from "node:fs/promises";
+import { execSync } from "node:child_process";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
@@ -11,6 +12,28 @@ globalThis.require = createRequire(import.meta.url);
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
 async function buildAll() {
+  // In production, ensure the clinic-search frontend is built if not already present.
+  // This handles the case where Render's dashboard build command doesn't include it.
+  if (process.env.NODE_ENV === "production") {
+    const repoRoot = path.resolve(artifactDir, "..");
+    const frontendIndex = path.resolve(repoRoot, "public", "index.html");
+    let frontendExists = false;
+    try {
+      await access(frontendIndex);
+      frontendExists = true;
+    } catch {
+      frontendExists = false;
+    }
+    if (!frontendExists) {
+      console.log("Building clinic-search frontend...");
+      execSync("pnpm --filter @workspace/clinic-search build", {
+        cwd: repoRoot,
+        stdio: "inherit",
+        env: { ...process.env, NODE_ENV: "production" },
+      });
+    }
+  }
+
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
