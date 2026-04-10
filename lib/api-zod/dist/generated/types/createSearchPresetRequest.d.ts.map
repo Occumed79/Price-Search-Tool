@@ -1,0 +1,1 @@
+{"version":3,"file":"createSearchPresetRequest.d.ts","sourceRoot":"","sources":["../../../src/generated/types/createSearchPresetRequest.ts"],"names":[],"mappings":"AAAA;;;;;;GAMG;AAEH,MAAM,WAAW,yBAAyB;IACxC,IAAI,EAAE,MAAM,CAAC;IACb,QAAQ,CAAC,EAAE,MAAM,CAAC;IAClB,WAAW,CAAC,EAAE,MAAM,CAAC;IACrB,UAAU,EAAE,MAAM,CAAC;IACnB,WAAW,EAAE,MAAM,CAAC;IACpB,QAAQ,CAAC,EAAE,MAAM,CAAC;CACnB"}

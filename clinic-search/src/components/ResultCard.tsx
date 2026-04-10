@@ -53,7 +53,7 @@ export default function ResultCard({ result, onSave, onReview, isSaving }: Resul
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`glass-card rounded-xl p-4 transition-all duration-200 hover:border-white/20 ${
+        className={`glass-card rounded-xl p-4 border transition-all duration-200 hover:border-white/20 ${
           isPosted ? "price-hit" : isNoPrice ? "border-white/[0.06]" : "border-yellow-500/10"
         }`}
       >

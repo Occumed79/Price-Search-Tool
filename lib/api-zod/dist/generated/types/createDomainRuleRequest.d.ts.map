@@ -1,0 +1,1 @@
+{"version":3,"file":"createDomainRuleRequest.d.ts","sourceRoot":"","sources":["../../../src/generated/types/createDomainRuleRequest.ts"],"names":[],"mappings":"AAAA;;;;;;GAMG;AACH,OAAO,KAAK,EAAE,+BAA+B,EAAE,MAAM,mCAAmC,CAAC;AAEzF,MAAM,WAAW,uBAAuB;IACtC,MAAM,EAAE,MAAM,CAAC;IACf,QAAQ,EAAE,+BAA+B,CAAC;IAC1C,MAAM,CAAC,EAAE,MAAM,CAAC;CACjB"}
