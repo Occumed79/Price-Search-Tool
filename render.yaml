@@ -20,9 +20,29 @@ services:
         sync: false
       - key: FIRECRAWL_API_KEY
         sync: false
+      - key: EXA_API_KEY
+        sync: false
+      - key: BROWSE_AI_API_KEY
+        sync: false
+      - key: BROWSE_AI_SEARCH_URL
+        sync: false
+      - key: BROWSER_USE_API_KEY
+        sync: false
+      - key: BROWSER_USE_SEARCH_URL
+        sync: false
+      - key: OLOSTEP_API_KEY
+        sync: false
+      - key: OLOSTEP_SEARCH_URL
+        sync: false
+      - key: CLOD_API_KEY
+        sync: false
+      - key: CLOD_SEARCH_URL
+        sync: false
       - key: GROQ_API_KEY
         sync: false
       - key: OPENROUTER_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
         sync: false
 
 databases:
