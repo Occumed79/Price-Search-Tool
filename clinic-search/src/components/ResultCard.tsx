@@ -122,42 +122,44 @@ export default function ResultCard({ result, onSave, onReview, isSaving }: Resul
           </div>
         )}
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {result.sourceUrl && (
-            <a
-              href={result.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-[11px] text-cyan-400/70 hover:text-cyan-300 transition-colors"
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {result.sourceUrl && (
+              <a
+                href={result.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-[11px] text-cyan-400/70 hover:text-cyan-300 transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                Open Source
+              </a>
+            )}
+
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors"
             >
-              <ExternalLink className="w-3 h-3" />
-              Open Source
-            </a>
-          )}
+              <Copy className="w-3 h-3" />
+              {copied ? "Copied!" : "Copy URL"}
+            </button>
 
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors"
-          >
-            <Copy className="w-3 h-3" />
-            {copied ? "Copied!" : "Copy URL"}
-          </button>
-
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors"
-          >
-            <FileText className="w-3 h-3" />
-            Evidence
-          </button>
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors"
+            >
+              <FileText className="w-3 h-3" />
+              Evidence
+            </button>
+          </div>
 
           <button
             onClick={() => onSave(result.id)}
             disabled={isSaving || result.isSaved}
-            className={`flex items-center gap-1.5 text-[11px] transition-colors ml-auto ${
+            className={`flex items-center gap-1.5 text-[11px] rounded-md border px-2 py-1 transition-colors min-w-fit ${
               result.isSaved
-                ? "text-cyan-400/80 cursor-default"
-                : "text-white/40 hover:text-cyan-400 cursor-pointer"
+                ? "text-cyan-300 border-cyan-500/40 bg-cyan-500/10 cursor-default"
+                : "text-white/70 border-white/15 hover:text-cyan-300 hover:border-cyan-500/40 cursor-pointer"
             }`}
           >
             {result.isSaved ? (

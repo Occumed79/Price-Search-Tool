@@ -10,8 +10,33 @@ import { logger } from "../lib/logger";
 const SERPER_API_KEY = process.env.SERPER_API_KEY;
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
+const EXA_API_KEY = process.env.EXA_API_KEY;
+const BROWSE_AI_API_KEY = process.env.BROWSE_AI_API_KEY;
+const BROWSER_USE_API_KEY = process.env.BROWSER_USE_API_KEY;
+const OLOSTEP_API_KEY = process.env.OLOSTEP_API_KEY;
+const CLOD_API_KEY = process.env.CLOD_API_KEY;
+const BROWSE_AI_SEARCH_URL = process.env.BROWSE_AI_SEARCH_URL;
+const BROWSER_USE_SEARCH_URL = process.env.BROWSER_USE_SEARCH_URL;
+const OLOSTEP_SEARCH_URL = process.env.OLOSTEP_SEARCH_URL;
+const CLOD_SEARCH_URL = process.env.CLOD_SEARCH_URL;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const OPENROUTER_KEY = process.env.OPENROUTER_KEY;
+const OPENROUTER_KEY = process.env.OPENROUTER_KEY ?? process.env.OPENROUTER_API_KEY;
+
+type SearchHit = { url: string; title: string; snippet: string };
+
+async function fetchWithTimeout(
+  input: string,
+  init: RequestInit,
+  timeoutMs = 8000,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 interface SearchParams {
   location: string;
@@ -92,6 +117,16 @@ const TRANSPARENT_DOMAINS = [
 ];
 
 const MARKETPLACE_DOMAINS = ["mdsave.com", "sesamecare.com", "solv.com", "zocdoc.com", "newchoicehealth.com"];
+const LOW_QUALITY_HOST_PATTERNS = [
+  /wikipedia\.org$/i,
+  /reddit\.com$/i,
+  /youtube\.com$/i,
+  /facebook\.com$/i,
+  /instagram\.com$/i,
+  /linkedin\.com$/i,
+  /yelp\.com$/i,
+];
+const PRICE_PAGE_HINTS = ["price", "pricing", "self-pay", "cash", "fee", "fees", "transparency", "cost"];
 
 function buildQueries(params: SearchParams): string[] {
   const { location, clinicType, serviceType, freeText } = params;
@@ -116,17 +151,17 @@ function buildQueries(params: SearchParams): string[] {
   return queries.slice(0, 6);
 }
 
-async function searchWithSerper(query: string): Promise<Array<{ url: string; title: string; snippet: string }>> {
+async function searchWithSerper(query: string): Promise<SearchHit[]> {
   if (!SERPER_API_KEY) return [];
   try {
-    const response = await fetch("https://google.serper.dev/search", {
+    const response = await fetchWithTimeout("https://google.serper.dev/search", {
       method: "POST",
       headers: {
         "X-API-KEY": SERPER_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ q: query, num: 10 }),
-    });
+    }, 7000);
     if (!response.ok) return [];
     const data = (await response.json()) as { organic?: Array<{ link: string; title: string; snippet: string }> };
     return (data.organic || []).map((r) => ({
@@ -139,10 +174,10 @@ async function searchWithSerper(query: string): Promise<Array<{ url: string; tit
   }
 }
 
-async function searchWithTavily(query: string): Promise<Array<{ url: string; title: string; snippet: string }>> {
+async function searchWithTavily(query: string): Promise<SearchHit[]> {
   if (!TAVILY_API_KEY) return [];
   try {
-    const response = await fetch("https://api.tavily.com/search", {
+    const response = await fetchWithTimeout("https://api.tavily.com/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -151,7 +186,7 @@ async function searchWithTavily(query: string): Promise<Array<{ url: string; tit
         search_depth: "basic",
         max_results: 10,
       }),
-    });
+    }, 7000);
     if (!response.ok) return [];
     const data = (await response.json()) as { results?: Array<{ url: string; title: string; content: string }> };
     return (data.results || []).map((r) => ({
@@ -164,7 +199,163 @@ async function searchWithTavily(query: string): Promise<Array<{ url: string; tit
   }
 }
 
+function normalizeSearchHits(items: Array<{ url?: string; link?: string; title?: string; snippet?: string; content?: string; text?: string }>): SearchHit[] {
+  return items
+    .map((item) => ({
+      url: item.url || item.link || "",
+      title: item.title || "",
+      snippet: item.snippet || item.content || item.text || "",
+    }))
+    .filter((item) => item.url.startsWith("http"));
+}
+
+function extractHitsFromUnknownPayload(payload: unknown): SearchHit[] {
+  const hits: SearchHit[] = [];
+  const visited = new Set<unknown>();
+
+  const walk = (node: unknown): void => {
+    if (!node || typeof node !== "object" || visited.has(node)) return;
+    visited.add(node);
+
+    if (Array.isArray(node)) {
+      for (const item of node) walk(item);
+      return;
+    }
+
+    const record = node as Record<string, unknown>;
+    const urlValue = typeof record.url === "string"
+      ? record.url
+      : typeof record.link === "string"
+        ? record.link
+        : undefined;
+
+    if (urlValue?.startsWith("http")) {
+      const titleValue = typeof record.title === "string" ? record.title : "";
+      const snippetValue =
+        typeof record.snippet === "string"
+          ? record.snippet
+          : typeof record.content === "string"
+            ? record.content
+            : typeof record.text === "string"
+              ? record.text
+              : "";
+      hits.push({ url: urlValue, title: titleValue, snippet: snippetValue });
+    }
+
+    for (const value of Object.values(record)) {
+      walk(value);
+    }
+  };
+
+  walk(payload);
+  return hits.slice(0, 15);
+}
+
+async function searchWithExa(query: string): Promise<SearchHit[]> {
+  if (!EXA_API_KEY) return [];
+  try {
+    const response = await fetchWithTimeout("https://api.exa.ai/search", {
+      method: "POST",
+      headers: {
+        "x-api-key": EXA_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query,
+        numResults: 10,
+        type: "keyword",
+      }),
+    }, 7000);
+    if (!response.ok) return [];
+    const data = (await response.json()) as { results?: Array<{ url?: string; title?: string; text?: string }> };
+    return normalizeSearchHits(data.results || []);
+  } catch {
+    return [];
+  }
+}
+
+async function searchWithGenericProvider(
+  provider: "browseai" | "browseruse" | "olostep" | "clod",
+  query: string,
+): Promise<SearchHit[]> {
+  const config = {
+    browseai: {
+      key: BROWSE_AI_API_KEY,
+      endpoint: BROWSE_AI_SEARCH_URL,
+    },
+    browseruse: {
+      key: BROWSER_USE_API_KEY,
+      endpoint: BROWSER_USE_SEARCH_URL,
+    },
+    olostep: {
+      key: OLOSTEP_API_KEY,
+      endpoint: OLOSTEP_SEARCH_URL,
+    },
+    clod: {
+      key: CLOD_API_KEY,
+      endpoint: CLOD_SEARCH_URL,
+    },
+  }[provider];
+
+  if (!config.key || !config.endpoint) return [];
+
+  try {
+    const response = await fetchWithTimeout(config.endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query,
+        maxResults: 10,
+      }),
+    }, 5000);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return extractHitsFromUnknownPayload(data);
+  } catch {
+    return [];
+  }
+}
+
+async function fetchPageWithFirecrawl(url: string): Promise<{ text: string; isPdf: boolean } | null> {
+  if (!FIRECRAWL_API_KEY) return null;
+  try {
+    const response = await fetchWithTimeout("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url,
+        formats: ["markdown", "html"],
+      }),
+    }, 9000);
+    if (!response.ok) return null;
+    const data = (await response.json()) as {
+      data?: {
+        markdown?: string;
+        content?: string;
+        html?: string;
+        metadata?: { sourceURL?: string };
+      };
+    };
+    const text = data.data?.markdown || data.data?.content || data.data?.html;
+    if (!text) return null;
+    const isPdf = url.toLowerCase().endsWith(".pdf");
+    const cleaned = text.replace(/\s+/g, " ").slice(0, 20000);
+    return { text: cleaned, isPdf };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchPage(url: string): Promise<{ text: string; isPdf: boolean } | null> {
+  const firecrawlResult = await fetchPageWithFirecrawl(url);
+  if (firecrawlResult) return firecrawlResult;
+
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
@@ -215,7 +406,52 @@ const FALSE_POSITIVE_PATTERNS = [
   /discount\s+\$\d+\s+off/i,
   /retail\s+value/i,
   /msrp/i,
+  /average\s+cost/i,
+  /typically\s+ranges?/i,
+  /may\s+vary/i,
+  /estimated?/i,
 ];
+
+function hasStrongServiceMatch(text: string, serviceType: string, freeText?: string): boolean {
+  const normalized = text.toLowerCase();
+  const service = serviceType.toLowerCase().trim();
+  if (normalized.includes(service)) return true;
+
+  const aliases = SERVICE_ALIASES[service] || [];
+  if (aliases.some((alias) => normalized.includes(alias.toLowerCase()))) return true;
+
+  const serviceTokens = service
+    .split(/\s+/)
+    .filter((token) => token.length >= 4 && !["visit", "test", "exam", "care"].includes(token));
+
+  const tokenMatches = serviceTokens.filter((token) => normalized.includes(token));
+  if (serviceTokens.length > 0 && tokenMatches.length >= Math.max(1, Math.ceil(serviceTokens.length * 0.6))) {
+    return true;
+  }
+
+  if (freeText) {
+    const freeTokens = freeText
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((token) => token.length >= 4);
+    if (freeTokens.some((token) => normalized.includes(token))) return true;
+  }
+
+  return false;
+}
+
+function isLikelyEstimatedPrice(snippet: string | undefined): boolean {
+  if (!snippet) return false;
+  return [
+    /average/i,
+    /typically/i,
+    /range/i,
+    /may vary/i,
+    /estimated?/i,
+    /about\s+\$/i,
+    /approximately/i,
+  ].some((pattern) => pattern.test(snippet));
+}
 
 function extractPrices(
   text: string,
@@ -276,6 +512,7 @@ const AI_PRICE_PROMPT = (serviceType: string, clinicType: string, text: string) 
 Rules:
 - Only return hasPostedPrice=true if you see an explicit dollar amount posted as a price
 - "Call for pricing", estimates, ranges without numbers, insurance rates = NOT a posted price
+- Any "average cost", "typically ranges", or "may vary" language = NOT a posted price
 - A real posted price looks like: "$89", "Self-pay: $95", "Cash price $110", "$75-$120"
 - Extract the price exactly as written in the text
 
@@ -288,7 +525,7 @@ ${text.slice(0, 3000)}`;
 async function aiExtractPriceWithGroq(text: string, serviceType: string, clinicType: string): Promise<AiPriceResult | null> {
   if (!GROQ_API_KEY) return null;
   try {
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${GROQ_API_KEY}`,
@@ -301,7 +538,7 @@ async function aiExtractPriceWithGroq(text: string, serviceType: string, clinicT
         max_tokens: 200,
         response_format: { type: "json_object" },
       }),
-    });
+    }, 9000);
     if (!response.ok) return null;
     const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
     const content = data.choices?.[0]?.message?.content;
@@ -316,7 +553,7 @@ async function aiExtractPriceWithGroq(text: string, serviceType: string, clinicT
 async function aiExtractPriceWithOpenRouter(text: string, serviceType: string, clinicType: string): Promise<AiPriceResult | null> {
   if (!OPENROUTER_KEY) return null;
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetchWithTimeout("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENROUTER_KEY}`,
@@ -330,7 +567,7 @@ async function aiExtractPriceWithOpenRouter(text: string, serviceType: string, c
         temperature: 0,
         max_tokens: 200,
       }),
-    });
+    }, 9000);
     if (!response.ok) return null;
     const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
     const content = data.choices?.[0]?.message?.content;
@@ -356,6 +593,39 @@ function classifySourceType(url: string): "direct_clinic" | "clinic_chain" | "ma
   if (TRANSPARENT_DOMAINS.some((d) => url.includes(d) && !MARKETPLACE_DOMAINS.includes(d))) return "clinic_chain";
   if (url.includes("location") || url.includes("clinic") || url.includes("office")) return "direct_clinic";
   return "weak_reference";
+}
+
+function isHighConfidenceUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+    if (LOW_QUALITY_HOST_PATTERNS.some((pattern) => pattern.test(host))) return false;
+
+    const full = `${host}${parsed.pathname}`.toLowerCase();
+    const hasPriceHint = PRICE_PAGE_HINTS.some((hint) => full.includes(hint));
+    const isMarketplace = MARKETPLACE_DOMAINS.some((d) => host.includes(d));
+    const isClinicLike =
+      host.includes("clinic") ||
+      host.includes("medical") ||
+      host.includes("health") ||
+      host.includes("urgent") ||
+      host.includes("care");
+
+    return hasPriceHint || isMarketplace || isClinicLike;
+  } catch {
+    return false;
+  }
+}
+
+function shouldSkipWeakSnippet(snippet: string): boolean {
+  const text = snippet.toLowerCase();
+  return (
+    text.includes("average cost") ||
+    text.includes("typically ranges") ||
+    text.includes("may vary") ||
+    text.includes("estimate") ||
+    text.includes("general information")
+  );
 }
 
 function classifySourceBucket(
@@ -434,7 +704,16 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
 
     const queries = buildQueries(params);
     const allUrls = new Set<string>();
-    const urlResults: Array<{ url: string; title: string; snippet: string }> = [];
+    const urlResults: SearchHit[] = [];
+    const hasAnySearchProviderKey = Boolean(
+      SERPER_API_KEY ||
+      TAVILY_API_KEY ||
+      EXA_API_KEY ||
+      (BROWSE_AI_API_KEY && BROWSE_AI_SEARCH_URL) ||
+      (BROWSER_USE_API_KEY && BROWSER_USE_SEARCH_URL) ||
+      (OLOSTEP_API_KEY && OLOSTEP_SEARCH_URL) ||
+      (CLOD_API_KEY && CLOD_SEARCH_URL),
+    );
 
     for (const query of queries) {
       const debugEntry: DebugEntry = {
@@ -444,22 +723,37 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
         status: "pending",
       };
 
-      let results: Array<{ url: string; title: string; snippet: string }> = [];
+      const providerTasks: Array<{ name: string; run: () => Promise<SearchHit[]> }> = [];
+      if (SERPER_API_KEY) providerTasks.push({ name: "serper", run: () => searchWithSerper(query) });
+      if (TAVILY_API_KEY) providerTasks.push({ name: "tavily", run: () => searchWithTavily(query) });
+      if (EXA_API_KEY) providerTasks.push({ name: "exa", run: () => searchWithExa(query) });
+      if (BROWSE_AI_API_KEY && BROWSE_AI_SEARCH_URL) providerTasks.push({ name: "browseai", run: () => searchWithGenericProvider("browseai", query) });
+      if (BROWSER_USE_API_KEY && BROWSER_USE_SEARCH_URL) providerTasks.push({ name: "browseruse", run: () => searchWithGenericProvider("browseruse", query) });
+      if (OLOSTEP_API_KEY && OLOSTEP_SEARCH_URL) providerTasks.push({ name: "olostep", run: () => searchWithGenericProvider("olostep", query) });
+      if (CLOD_API_KEY && CLOD_SEARCH_URL) providerTasks.push({ name: "clod", run: () => searchWithGenericProvider("clod", query) });
 
-      if (SERPER_API_KEY) {
-        results = await searchWithSerper(query);
-        debugEntry.provider = "serper";
-      } else if (TAVILY_API_KEY) {
-        results = await searchWithTavily(query);
-        debugEntry.provider = "tavily";
-      } else {
+      const providerNames = providerTasks.map((task) => task.name);
+      const results: SearchHit[] = [];
+
+      debugEntry.provider = providerNames.length > 0 ? providerNames.join(",") : "none";
+
+      if (providerTasks.length === 0) {
         debugEntry.status = "no_api_key";
-        debugEntry.notes = "No search API key configured (SERPER_API_KEY or TAVILY_API_KEY)";
+        debugEntry.notes = "No search provider configured. For generic providers, set both *_API_KEY and *_SEARCH_URL.";
         debugLog.push(debugEntry);
         continue;
       }
 
+      const providerResults = await Promise.allSettled(providerTasks.map((task) => task.run()));
+      for (const settled of providerResults) {
+        if (settled.status === "fulfilled" && settled.value.length > 0) {
+          results.push(...settled.value);
+        }
+      }
+
       for (const result of results) {
+        if (!isHighConfidenceUrl(result.url)) continue;
+        if (shouldSkipWeakSnippet(result.snippet)) continue;
         if (!allUrls.has(result.url)) {
           allUrls.add(result.url);
           urlResults.push(result);
@@ -467,7 +761,7 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
         }
       }
 
-      debugEntry.status = "complete";
+      debugEntry.status = results.length > 0 ? "complete" : "no_results";
       debugLog.push(debugEntry);
     }
 
@@ -491,6 +785,7 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
         const textToSearch = (pageData && !isPdf) ? pageData.text : snippet;
 
         const regexPrices = extractPrices(textToSearch, params.serviceType, params.freeText);
+        const hasServiceMatch = hasStrongServiceMatch(textToSearch, params.serviceType, params.freeText);
         const hasClinicContext =
           textToSearch.toLowerCase().includes("clinic") ||
           textToSearch.toLowerCase().includes("medical") ||
@@ -536,11 +831,30 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
             : "No clear clinic or price evidence";
         }
 
+        const sourceType = classifySourceType(url);
+        const likelyEstimated = isLikelyEstimatedPrice(finalSnippet);
+        if (hasPostedPrice && (!hasServiceMatch || likelyEstimated || sourceType === "weak_reference")) {
+          hasPostedPrice = false;
+          finalPrice = undefined;
+          finalPriceMin = undefined;
+          finalPriceMax = undefined;
+          finalSnippet = undefined;
+          extractionNotes = !hasServiceMatch
+            ? "Candidate price rejected: weak match for requested service"
+            : likelyEstimated
+              ? "Candidate price rejected: estimated/average language detected"
+              : "Candidate price rejected: weak reference source";
+        }
+
         // Build synthetic prices array for bucket classification
         const prices = hasPostedPrice ? [{ price: finalPrice!, min: finalPriceMin ?? 0, max: finalPriceMax ?? 0, snippet: finalSnippet ?? "", phrase: params.serviceType }] : [];
 
-        const sourceType = classifySourceType(url);
         const sourceBucket = classifySourceBucket(prices, hasClinicContext);
+
+        if (sourceBucket === "posted_price" && params.postedPricesOnly) {
+          if (sourceType === "weak_reference") continue;
+          if (!params.includeMarketplaces && sourceType === "marketplace") continue;
+        }
 
         if (params.verifiedEvidenceOnly && sourceBucket !== "posted_price") continue;
         if (params.postedPricesOnly && sourceBucket !== "posted_price") continue;
@@ -578,7 +892,7 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
       }
     }
 
-    if (SERPER_API_KEY === undefined && TAVILY_API_KEY === undefined) {
+    if (!hasAnySearchProviderKey) {
       const demoResults = generateDemoResults(params, city, state, zip, geo);
       insertedResults.push(...demoResults);
     }
