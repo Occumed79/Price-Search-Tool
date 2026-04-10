@@ -154,10 +154,10 @@ export default function ResultCard({ result, onSave, onReview, isSaving }: Resul
           <button
             onClick={() => onSave(result.id)}
             disabled={isSaving || result.isSaved}
-            className={`flex items-center gap-1.5 text-[11px] transition-colors ml-auto ${
+            className={`flex items-center gap-1.5 text-[11px] ml-auto px-2.5 py-1 rounded-md border transition-all ${
               result.isSaved
-                ? "text-cyan-400/80 cursor-default"
-                : "text-white/40 hover:text-cyan-400 cursor-pointer"
+                ? "text-cyan-300 border-cyan-500/30 bg-cyan-500/10 cursor-default"
+                : "text-cyan-200 border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 hover:text-cyan-100 cursor-pointer"
             }`}
           >
             {result.isSaved ? (
