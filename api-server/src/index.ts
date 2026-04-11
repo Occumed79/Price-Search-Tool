@@ -1,5 +1,14 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { readConfig } from "./routes/settings";
+
+// Load API keys saved via settings UI into process.env
+const savedConfig = readConfig();
+for (const [key, value] of Object.entries(savedConfig)) {
+  if (!process.env[key] && value) {
+    process.env[key] = String(value);
+  }
+}
 
 const rawPort = process.env["PORT"];
 

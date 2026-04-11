@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Settings, Plus, Trash2, Shield, BookOpen, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Settings, Plus, Trash2, Shield, BookOpen, Loader2, Eye, EyeOff, CheckCircle, XCircle, Key } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   useListDomainRules,
@@ -12,6 +12,22 @@ import {
   getListSearchPresetsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+
+interface ApiKeyStatus {
+  set: boolean;
+  masked: string;
+  label: string;
+  category: string;
+  required: boolean;
+}
+
+type ApiKeyMap = Record<string, ApiKeyStatus>;
+
+const CATEGORY_LABELS: Record<string, string> = {
+  search: "Search Providers",
+  crawl: "Web Crawling",
+  ai: "AI / Extraction",
+};
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
@@ -31,6 +47,62 @@ export default function SettingsPage() {
   const [presetName, setPresetName] = useState("");
   const [presetClinicType, setPresetClinicType] = useState("urgent care");
   const [presetService, setPresetService] = useState("urgent care visit");
+
+  // API key state
+  const [apiKeys, setApiKeys] = useState<ApiKeyMap>({});
+  const [loadingKeys, setLoadingKeys] = useState(true);
+  const [keyInputs, setKeyInputs] = useState<Record<string, string>>({});
+  const [keyVisible, setKeyVisible] = useState<Record<string, boolean>>({});
+  const [keySaving, setKeySaving] = useState<Record<string, boolean>>({});
+  const [keySaved, setKeySaved] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    fetchApiKeys();
+  }, []);
+
+  async function fetchApiKeys() {
+    setLoadingKeys(true);
+    try {
+      const res = await fetch("/api/settings/api-keys");
+      if (res.ok) {
+        const data: ApiKeyMap = await res.json();
+        setApiKeys(data);
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setLoadingKeys(false);
+    }
+  }
+
+  async function saveApiKey(key: string) {
+    const value = keyInputs[key] ?? "";
+    setKeySaving((prev) => ({ ...prev, [key]: true }));
+    try {
+      const res = await fetch("/api/settings/api-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value }),
+      });
+      if (res.ok) {
+        setKeySaved((prev) => ({ ...prev, [key]: true }));
+        setTimeout(() => setKeySaved((prev) => ({ ...prev, [key]: false })), 2000);
+        setKeyInputs((prev) => ({ ...prev, [key]: "" }));
+        await fetchApiKeys();
+      }
+    } finally {
+      setKeySaving((prev) => ({ ...prev, [key]: false }));
+    }
+  }
+
+  async function deleteApiKey(key: string) {
+    try {
+      await fetch(`/api/settings/api-keys/${key}`, { method: "DELETE" });
+      await fetchApiKeys();
+    } catch {
+      // silently ignore
+    }
+  }
 
   async function handleAddRule(e: React.FormEvent) {
     e.preventDefault();
@@ -59,6 +131,9 @@ export default function SettingsPage() {
     queryClient.invalidateQueries({ queryKey: getListSearchPresetsQueryKey() });
   }
 
+  // Group keys by category
+  const categories = Array.from(new Set(Object.values(apiKeys).map((k) => k.category)));
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center gap-3 mb-6">
@@ -67,11 +142,122 @@ export default function SettingsPage() {
         </div>
         <div>
           <h1 className="text-base font-semibold text-white/90">Settings</h1>
-          <p className="text-xs text-white/40">Domain rules, presets, and configuration</p>
+          <p className="text-xs text-white/40">API keys, domain rules, and presets</p>
         </div>
       </div>
 
       <div className="space-y-6">
+        {/* API Keys Section */}
+        <section className="glass-card rounded-xl p-5 border border-white/[0.06]">
+          <div className="flex items-center gap-2 mb-5">
+            <Key className="w-4 h-4 text-cyan-400/70" />
+            <h2 className="text-sm font-semibold text-white/80">API Keys</h2>
+            <div className="ml-auto">
+              {loadingKeys ? (
+                <Loader2 className="w-3.5 h-3.5 text-white/30 animate-spin" />
+              ) : (
+                <span className="text-[10px] text-white/30">
+                  {Object.values(apiKeys).filter((k) => k.set).length} / {Object.keys(apiKeys).length} configured
+                </span>
+              )}
+            </div>
+          </div>
+
+          {loadingKeys ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {categories.map((cat) => (
+                <div key={cat}>
+                  <div className="text-[10px] text-white/25 uppercase tracking-wider font-medium mb-3">
+                    {CATEGORY_LABELS[cat] || cat}
+                  </div>
+                  <div className="space-y-2">
+                    {Object.entries(apiKeys)
+                      .filter(([, v]) => v.category === cat)
+                      .map(([key, status]) => (
+                        <motion.div
+                          key={key}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="rounded-lg bg-white/[0.03] border border-white/[0.05] p-3"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {status.set ? (
+                                <CheckCircle className="w-3.5 h-3.5 text-green-400/80 shrink-0" />
+                              ) : (
+                                <XCircle className="w-3.5 h-3.5 text-white/20 shrink-0" />
+                              )}
+                              <span className="text-xs text-white/70 font-medium">{status.label}</span>
+                              {status.required && (
+                                <span className="text-[9px] text-amber-400/60 border border-amber-500/20 px-1 py-0.5 rounded">required</span>
+                              )}
+                            </div>
+                            {status.set && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-white/30">{status.masked}</span>
+                                <button
+                                  onClick={() => deleteApiKey(key)}
+                                  className="p-0.5 text-white/20 hover:text-red-400 transition-colors"
+                                  title="Remove key"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            <div className="flex-1 relative">
+                              <input
+                                type={keyVisible[key] ? "text" : "password"}
+                                value={keyInputs[key] ?? ""}
+                                onChange={(e) => setKeyInputs((prev) => ({ ...prev, [key]: e.target.value }))}
+                                onKeyDown={(e) => e.key === "Enter" && saveApiKey(key)}
+                                placeholder={status.set ? "Enter new key to replace..." : `Paste ${key}...`}
+                                className="w-full glass-input rounded-lg pl-3 pr-8 py-1.5 text-xs text-white/80 placeholder-white/20 focus:outline-none font-mono"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setKeyVisible((prev) => ({ ...prev, [key]: !prev[key] }))}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 transition-colors"
+                              >
+                                {keyVisible[key] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => saveApiKey(key)}
+                              disabled={!keyInputs[key]?.trim() || keySaving[key]}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                                keySaved[key]
+                                  ? "bg-green-500/20 border border-green-500/30 text-green-300"
+                                  : "bg-cyan-500/15 border border-cyan-500/25 text-cyan-300 hover:bg-cyan-500/25 disabled:opacity-40"
+                              }`}
+                            >
+                              {keySaving[key] ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : keySaved[key] ? (
+                                "Saved!"
+                              ) : (
+                                "Save"
+                              )}
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-[10px] text-white/20 mt-4">
+            Keys are stored server-side and applied immediately. Env vars set on the host take precedence at startup.
+          </p>
+        </section>
+
         {/* Domain Rules */}
         <section className="glass-card rounded-xl p-5 border border-white/[0.06]">
           <div className="flex items-center gap-2 mb-4">
@@ -216,32 +402,6 @@ export default function SettingsPage() {
                 </button>
               </motion.div>
             ))}
-          </div>
-        </section>
-
-        {/* API Key status */}
-        <section className="glass-card rounded-xl p-5 border border-white/[0.06]">
-          <h2 className="text-sm font-semibold text-white/80 mb-4">Search Providers</h2>
-          <div className="space-y-2 text-xs text-white/40">
-            <p>Configure environment variables to enable live search:</p>
-            <p className="text-[10px] text-amber-300/70">
-              API keys are not entered in this UI. Set them in your backend host (Render) Environment settings.
-            </p>
-            <div className="font-mono text-[11px] space-y-1 bg-white/[0.03] rounded-lg p-3 border border-white/[0.05]">
-              <div><span className="text-cyan-400/70">SERPER_API_KEY</span> — Google search via Serper.dev</div>
-              <div><span className="text-cyan-400/70">TAVILY_API_KEY</span> — AI-powered web search via Tavily</div>
-              <div><span className="text-cyan-400/70">FIRECRAWL_API_KEY</span> — Advanced web crawling</div>
-              <div><span className="text-cyan-400/70">EXA_API_KEY</span> — Exa semantic/keyword web search</div>
-              <div><span className="text-cyan-400/70">BROWSE_AI_API_KEY</span> — Browse AI provider (optional)</div>
-              <div><span className="text-cyan-400/70">BROWSER_USE_API_KEY</span> — Browser-use provider (optional)</div>
-              <div><span className="text-cyan-400/70">OLOSTEP_API_KEY</span> — Olostep provider (optional)</div>
-              <div><span className="text-cyan-400/70">CLOD_API_KEY</span> — Clod provider (optional)</div>
-              <div><span className="text-cyan-400/70">BROWSE_AI_SEARCH_URL</span>/<span className="text-cyan-400/70">BROWSER_USE_SEARCH_URL</span> — endpoint URL required</div>
-              <div><span className="text-cyan-400/70">OLOSTEP_SEARCH_URL</span>/<span className="text-cyan-400/70">CLOD_SEARCH_URL</span> — endpoint URL required</div>
-              <div><span className="text-cyan-400/70">GROQ_API_KEY</span> — AI price confirmation</div>
-              <div><span className="text-cyan-400/70">OPENROUTER_KEY</span>/<span className="text-cyan-400/70">OPENROUTER_API_KEY</span> — AI fallback provider</div>
-            </div>
-            <p className="text-[10px] text-white/25">Without API keys, demo results are shown to illustrate the tool's features.</p>
           </div>
         </section>
       </div>
