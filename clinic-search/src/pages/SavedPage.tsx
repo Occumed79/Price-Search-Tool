@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bookmark, Trash2, ExternalLink, Loader2, MapPin } from "lucide-react";
+import { Bookmark, Trash2, ExternalLink, Loader2, MapPin, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   useListSavedResults,
@@ -29,6 +29,7 @@ export default function SavedPage() {
   const [activeResult, setActiveResult] = useState<PriceResult | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const [mapZoom, setMapZoom] = useState(1);
 
   async function handleDelete(id: number) {
     await deleteSaved.mutateAsync({ id });
@@ -71,14 +72,41 @@ export default function SavedPage() {
         <div className="px-4 pt-3 pb-1 border-b border-white/[0.04] flex items-center gap-2">
           <MapPin className="w-3.5 h-3.5 text-cyan-400/60" />
           <span className="text-xs font-medium text-white/50">Clinic Locations Map</span>
-          <span className="text-[10px] text-white/25 ml-auto">{withCoords.length} pinned</span>
+          <span className="text-[10px] text-white/25 ml-2">{withCoords.length} pinned</span>
+          {/* Zoom controls */}
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              onClick={() => setMapZoom((z) => Math.min(z + 0.8, 8))}
+              className="p-1 rounded text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-colors"
+              title="Zoom in"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setMapZoom((z) => Math.max(z - 0.8, 0.8))}
+              className="p-1 rounded text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-colors"
+              title="Zoom out"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setMapZoom(1)}
+              className="p-1 rounded text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-colors"
+              title="Reset zoom"
+            >
+              <RotateCcw className="w-3 h-3" />
+            </button>
+          </div>
         </div>
 
         <div className="relative" style={{ height: 340 }}>
           {withCoords.length === 0 && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
               <MapPin className="w-8 h-8 text-white/10 mb-2" />
-              <p className="text-xs text-white/25">Save results with locations to see them on the map</p>
+              <p className="text-xs text-white/25 text-center px-8">
+                Save a result to pin it here.<br />
+                <span className="text-white/15">Coordinates are geocoded automatically on save.</span>
+              </p>
             </div>
           )}
 
@@ -86,19 +114,24 @@ export default function SavedPage() {
             projection="geoAlbersUsa"
             style={{ width: "100%", height: "100%" }}
           >
-            <ZoomableGroup zoom={1} minZoom={0.8} maxZoom={6}>
+            <ZoomableGroup
+              zoom={mapZoom}
+              minZoom={0.8}
+              maxZoom={8}
+              onMoveEnd={({ zoom }) => setMapZoom(zoom)}
+            >
               <Geographies geography={GEO_URL}>
                 {({ geographies }: { geographies: Array<{rsmKey: string}> }) =>
                   geographies.map((geo) => (
                     <Geography
                       key={geo.rsmKey}
                       geography={geo}
-                      fill="rgba(30, 41, 59, 0.8)"
-                      stroke="rgba(148, 163, 184, 0.1)"
+                      fill="rgba(22, 33, 52, 0.9)"
+                      stroke="rgba(100, 116, 139, 0.2)"
                       strokeWidth={0.5}
                       style={{
                         default: { outline: "none" },
-                        hover: { fill: "rgba(51, 65, 85, 0.9)", outline: "none" },
+                        hover: { fill: "rgba(30, 45, 68, 0.95)", outline: "none" },
                         pressed: { outline: "none" },
                       }}
                     />
@@ -121,22 +154,32 @@ export default function SavedPage() {
                     onMouseEnter={() => setHoveredId(saved.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
+                    {/* Outer ring for posted prices */}
+                    {result.sourceBucket === "posted_price" && (
+                      <circle
+                        r={isHovered ? 13 : 10}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth={1}
+                        strokeOpacity={0.3}
+                        style={{ pointerEvents: "none", transition: "r 0.15s" }}
+                      />
+                    )}
                     <circle
-                      r={isHovered ? 8 : 5}
+                      r={isHovered ? 7 : 5}
                       fill={color}
-                      fillOpacity={0.85}
-                      stroke={isHovered ? "white" : color}
-                      strokeWidth={isHovered ? 2 : 1}
-                      strokeOpacity={0.5}
+                      fillOpacity={isHovered ? 1 : 0.85}
+                      stroke="rgba(0,0,0,0.4)"
+                      strokeWidth={1}
                       style={{ cursor: "pointer", transition: "r 0.15s, fill-opacity 0.15s" }}
                     />
-                    {isHovered && result.postedPrice && (
+                    {isHovered && (
                       <text
                         textAnchor="middle"
-                        y={-12}
-                        style={{ fontSize: "9px", fill: "#ffffff", fontWeight: 600, pointerEvents: "none" }}
+                        y={-14}
+                        style={{ fontSize: "9px", fill: "#ffffff", fontWeight: 700, pointerEvents: "none", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}
                       >
-                        {result.postedPrice}
+                        {result.postedPrice || result.clinicName?.split(" ").slice(0, 2).join(" ")}
                       </text>
                     )}
                   </Marker>
@@ -153,7 +196,7 @@ export default function SavedPage() {
               <span className="text-[10px] text-white/30">{label}</span>
             </div>
           ))}
-          <span className="text-[10px] text-white/20 ml-auto">Click a pin to view evidence</span>
+          <span className="text-[10px] text-white/20 ml-auto">Scroll to zoom · Drag to pan · Click pin for details</span>
         </div>
       </div>
 
