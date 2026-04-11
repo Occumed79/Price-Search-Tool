@@ -8,7 +8,7 @@ import {
   domainRulesTable,
   searchPresetsTable,
 } from "@workspace/db";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc, count, isNull, and } from "drizzle-orm";
 import {
   StartSearchBody,
   SaveResultBody,
@@ -541,6 +541,53 @@ router.get("/results/:searchId/map", async (req, res) => {
     }));
 
   res.json(pins);
+});
+
+// POST /api/geocode-backfill  — geocode all saved results that have no lat/lng
+// Responds immediately with count, runs geocoding async in background.
+router.post("/geocode-backfill", async (_req, res) => {
+  // Find all saved price_results without coordinates that have some location info
+  const rows = await db
+    .select({
+      id: priceResultsTable.id,
+      location: priceResultsTable.location,
+      city: priceResultsTable.city,
+      state: priceResultsTable.state,
+      zipCode: priceResultsTable.zipCode,
+    })
+    .from(savedResultsTable)
+    .innerJoin(priceResultsTable, eq(savedResultsTable.resultId, priceResultsTable.id))
+    .where(isNull(priceResultsTable.latitude));
+
+  res.json({ queued: rows.length });
+
+  // Run geocoding in background with 1.1s delay between requests (Nominatim policy)
+  void (async () => {
+    for (const row of rows) {
+      const query = [row.city, row.state, row.zipCode]
+        .filter(Boolean)
+        .join(", ") || row.location;
+      if (!query) continue;
+      try {
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+          { headers: { "User-Agent": "PostedPriceClinicSearch/1.0 (self-hosted)" } }
+        );
+        const geoData = await geoRes.json() as Array<{ lat: string; lon: string }>;
+        if (geoData.length > 0) {
+          await db
+            .update(priceResultsTable)
+            .set({ latitude: geoData[0].lat, longitude: geoData[0].lon })
+            .where(eq(priceResultsTable.id, row.id));
+          logger.info({ id: row.id, query }, "Backfill geocoded");
+        }
+        // Respect Nominatim's 1 req/sec policy
+        await new Promise((r) => setTimeout(r, 1100));
+      } catch (err) {
+        logger.warn({ err, id: row.id }, "Backfill geocode failed");
+      }
+    }
+  })();
 });
 
 export default router;

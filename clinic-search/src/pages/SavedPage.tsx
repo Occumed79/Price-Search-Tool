@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bookmark, Trash2, ExternalLink, Loader2, MapPin, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -30,6 +30,26 @@ export default function SavedPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [mapZoom, setMapZoom] = useState(1);
+  const [geocodingActive, setGeocodingActive] = useState(false);
+
+  // On mount: trigger backfill geocoding for any saved results that lack coordinates
+  useEffect(() => {
+    fetch("/api/geocode-backfill", { method: "POST" })
+      .then((r) => r.json())
+      .then((data: { queued: number }) => {
+        if (data.queued > 0) {
+          setGeocodingActive(true);
+          // Wait for geocoding to complete (1.1s per result + buffer), then refresh
+          const delay = Math.min(data.queued * 1200 + 2000, 30000);
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: getListSavedResultsQueryKey() });
+            setGeocodingActive(false);
+          }, delay);
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleDelete(id: number) {
     await deleteSaved.mutateAsync({ id });
@@ -73,6 +93,12 @@ export default function SavedPage() {
           <MapPin className="w-3.5 h-3.5 text-cyan-400/60" />
           <span className="text-xs font-medium text-white/50">Clinic Locations Map</span>
           <span className="text-[10px] text-white/25 ml-2">{withCoords.length} pinned</span>
+          {geocodingActive && (
+            <span className="flex items-center gap-1 text-[10px] text-cyan-400/60 ml-2">
+              <Loader2 className="w-2.5 h-2.5 animate-spin" />
+              Geocoding...
+            </span>
+          )}
           {/* Zoom controls */}
           <div className="ml-auto flex items-center gap-1">
             <button
