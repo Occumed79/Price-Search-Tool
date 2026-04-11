@@ -404,6 +404,32 @@ export default function SettingsPage() {
             ))}
           </div>
         </section>
+
+        {/* API Key status */}
+        <section className="glass-card rounded-xl p-5 border border-white/[0.06]">
+          <h2 className="text-sm font-semibold text-white/80 mb-4">Search Providers</h2>
+          <div className="space-y-2 text-xs text-white/40">
+            <p>Configure environment variables to enable live search:</p>
+            <p className="text-[11px] text-amber-300/70">
+              API keys are set on your backend host (Render) environment page — they are not entered directly in this UI.
+            </p>
+            <div className="font-mono text-[11px] space-y-1 bg-white/[0.03] rounded-lg p-3 border border-white/[0.05]">
+              <div><span className="text-cyan-400/70">SERPER_API_KEY</span> — Google search via Serper.dev</div>
+              <div><span className="text-cyan-400/70">TAVILY_API_KEY</span> — AI-powered web search via Tavily</div>
+              <div><span className="text-cyan-400/70">FIRECRAWL_API_KEY</span> — Advanced web crawling</div>
+              <div><span className="text-cyan-400/70">EXA_API_KEY</span> — Exa semantic/keyword web search</div>
+              <div><span className="text-cyan-400/70">BROWSE_AI_API_KEY</span> — Browse AI provider (optional)</div>
+              <div><span className="text-cyan-400/70">BROWSER_USE_API_KEY</span> — Browser-use provider (optional)</div>
+              <div><span className="text-cyan-400/70">OLOSTEP_API_KEY</span> — Olostep provider (optional)</div>
+              <div><span className="text-cyan-400/70">CLOD_API_KEY</span> — Clod provider (optional)</div>
+              <div><span className="text-cyan-400/70">BROWSE_AI_SEARCH_URL</span>/<span className="text-cyan-400/70">BROWSER_USE_SEARCH_URL</span> — endpoint URL required</div>
+              <div><span className="text-cyan-400/70">OLOSTEP_SEARCH_URL</span>/<span className="text-cyan-400/70">CLOD_SEARCH_URL</span> — endpoint URL required</div>
+              <div><span className="text-cyan-400/70">GROQ_API_KEY</span> — AI price confirmation</div>
+              <div><span className="text-cyan-400/70">OPENROUTER_KEY</span>/<span className="text-cyan-400/70">OPENROUTER_API_KEY</span> — AI fallback provider</div>
+            </div>
+            <p className="text-[10px] text-white/25">Without API keys, demo results are shown to illustrate the tool's features.</p>
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -117,6 +117,16 @@ const TRANSPARENT_DOMAINS = [
 ];
 
 const MARKETPLACE_DOMAINS = ["mdsave.com", "sesamecare.com", "solv.com", "zocdoc.com", "newchoicehealth.com"];
+const LOW_QUALITY_HOST_PATTERNS = [
+  /wikipedia\.org$/i,
+  /reddit\.com$/i,
+  /youtube\.com$/i,
+  /facebook\.com$/i,
+  /instagram\.com$/i,
+  /linkedin\.com$/i,
+  /yelp\.com$/i,
+];
+const PRICE_PAGE_HINTS = ["price", "pricing", "self-pay", "cash", "fee", "fees", "transparency", "cost"];
 
 // Domains that never contain directly-posted clinic prices — excluded at both query and URL level
 const SKIP_DOMAINS = [
@@ -888,6 +898,39 @@ function classifySourceType(url: string): "direct_clinic" | "clinic_chain" | "ma
   return "direct_clinic";
 }
 
+function isHighConfidenceUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+    if (LOW_QUALITY_HOST_PATTERNS.some((pattern) => pattern.test(host))) return false;
+
+    const full = `${host}${parsed.pathname}`.toLowerCase();
+    const hasPriceHint = PRICE_PAGE_HINTS.some((hint) => full.includes(hint));
+    const isMarketplace = MARKETPLACE_DOMAINS.some((d) => host.includes(d));
+    const isClinicLike =
+      host.includes("clinic") ||
+      host.includes("medical") ||
+      host.includes("health") ||
+      host.includes("urgent") ||
+      host.includes("care");
+
+    return hasPriceHint || isMarketplace || isClinicLike;
+  } catch {
+    return false;
+  }
+}
+
+function shouldSkipWeakSnippet(snippet: string): boolean {
+  const text = snippet.toLowerCase();
+  return (
+    text.includes("average cost") ||
+    text.includes("typically ranges") ||
+    text.includes("may vary") ||
+    text.includes("estimate") ||
+    text.includes("general information")
+  );
+}
+
 function classifySourceBucket(
   prices: ReturnType<typeof extractPrices>,
   hasClinicContext: boolean,
@@ -997,6 +1040,12 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
 
       debugEntry.provider = providerNames.length > 0 ? providerNames.join(",") : "none";
 
+
+      const providerNames = providerTasks.map((task) => task.name);
+      const results: SearchHit[] = [];
+
+      debugEntry.provider = providerNames.length > 0 ? providerNames.join(",") : "none";
+
       if (providerTasks.length === 0) {
         debugEntry.status = "no_api_key";
         debugEntry.notes = "No search provider configured. For generic providers, set both *_API_KEY and *_SEARCH_URL.";
@@ -1019,6 +1068,8 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
         } catch {
           continue;
         }
+        if (!isHighConfidenceUrl(result.url)) continue;
+        if (shouldSkipWeakSnippet(result.snippet)) continue;
         if (!allUrls.has(result.url)) {
           allUrls.add(result.url);
           urlResults.push(result);
@@ -1164,6 +1215,11 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
         const prices = hasPostedPrice ? [{ price: finalPrice!, min: finalPriceMin ?? 0, max: finalPriceMax ?? 0, snippet: finalSnippet ?? "", phrase: params.serviceType }] : [];
 
         const sourceBucket = classifySourceBucket(prices, hasClinicContext);
+
+        if (sourceBucket === "posted_price" && params.postedPricesOnly) {
+          if (sourceType === "weak_reference") continue;
+          if (!params.includeMarketplaces && sourceType === "marketplace") continue;
+        }
 
         if (params.verifiedEvidenceOnly && sourceBucket !== "posted_price") continue;
         if (params.postedPricesOnly && sourceBucket !== "posted_price") continue;
