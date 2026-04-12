@@ -425,7 +425,7 @@ export default function SettingsPage() {
               <div><span className="text-cyan-400/70">BROWSE_AI_SEARCH_URL</span>/<span className="text-cyan-400/70">BROWSER_USE_SEARCH_URL</span> — endpoint URL required</div>
               <div><span className="text-cyan-400/70">OLOSTEP_SEARCH_URL</span>/<span className="text-cyan-400/70">CLOD_SEARCH_URL</span> — endpoint URL required</div>
               <div><span className="text-cyan-400/70">GROQ_API_KEY</span> — AI price confirmation</div>
-              <div><span className="text-cyan-400/70">OPENROUTER_KEY</span>/<span className="text-cyan-400/70">OPENROUTER_API_KEY</span> — AI fallback provider</div>
+              <div><span className="text-cyan-400/70">OPENROUTER_API_KEY</span> — AI fallback provider (<span className="text-white/30">OPENROUTER_KEY</span> legacy alias still works)</div>
             </div>
             <p className="text-[10px] text-white/25">Without API keys, demo results are shown to illustrate the tool's features.</p>
           </div>

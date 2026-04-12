@@ -128,69 +128,6 @@ const LOW_QUALITY_HOST_PATTERNS = [
 ];
 const PRICE_PAGE_HINTS = ["price", "pricing", "self-pay", "cash", "fee", "fees", "transparency", "cost"];
 
-// Domains that never contain directly-posted clinic prices — excluded at both query and URL level
-const SKIP_DOMAINS = [
-  // Healthcare aggregators (user goes to these directly — not useful here)
-  "mdsave.com", "sesamecare.com", "zocdoc.com", "solv.com", "solvhealth.com",
-  "newchoicehealth.com", "turquoise.health", "fairhealthconsumer.org",
-  // Health info / cost-estimate sites (average costs, not posted prices)
-  "webmd.com", "healthline.com", "verywellhealth.com", "verywell.com",
-  "mayoclinic.org", "medicinenet.com", "costhelper.com", "drugs.com",
-  "clevelandclinic.org", "hopkinsmedicine.org", "medlineplus.gov",
-  // Government portals (national averages, CMS data — not individual clinic prices)
-  "nih.gov", "cdc.gov", "cms.gov", "healthcare.gov", "hhs.gov",
-  // Social / UGC
-  "reddit.com", "quora.com", "facebook.com", "twitter.com", "x.com",
-  "linkedin.com", "youtube.com", "tiktok.com", "instagram.com",
-  // Review / directory aggregators
-  "yelp.com", "healthgrades.com", "vitals.com", "ratemds.com",
-  "sharecare.com", "wellness.com", "yellowpages.com",
-  // News / personal-finance media (cost articles, not posted prices)
-  "nytimes.com", "wsj.com", "forbes.com", "nerdwallet.com",
-  "gobankingrates.com", "valuepenguin.com", "wisevoter.com",
-  // Misc
-  "wikipedia.org", "wikihow.com", "goodrx.com",
-];
-
-// URL path segments that structurally indicate a pricing page
-const PRICE_URL_PATHS = [
-  "/self-pay", "/selfpay", "/self_pay",
-  "/cash-price", "/cash-prices", "/cash-pay", "/cash_price",
-  "/fee-schedule", "/fee_schedule", "/feeschedule",
-  "/pricing", "/our-pricing", "/service-pricing",
-  "/fees", "/our-fees", "/service-fees",
-  "/transparency", "/price-transparency", "/patient-pricing",
-  "/uninsured", "/no-insurance", "/pay-without-insurance",
-  "/services/pricing", "/services/fees",
-  "/patient-resources/pricing", "/patient-resources/fees",
-  "/rates", "/affordable-care",
-];
-
-// URL path segments that indicate a non-pricing page (blog, conditions, about, etc.)
-const NON_PRICE_URL_PATHS = [
-  "/blog/", "/news/", "/article/", "/articles/", "/post/",
-  "/condition/", "/conditions/", "/disease/", "/symptom/",
-  "/treatment/", "/procedure/", "/about-us/", "/about/",
-  "/careers/", "/team/", "/providers/", "/physician/",
-  "/faq", "/contact", "/directions", "/insurance/",
-];
-
-// Negative -site: operators appended to every query to filter noise at the Google level
-const QUERY_NEGATIVES = [
-  "mdsave.com", "sesamecare.com", "zocdoc.com", "solv.com",
-  "newchoicehealth.com", "healthline.com", "webmd.com", "mayoclinic.org",
-  "verywellhealth.com", "costhelper.com", "healthgrades.com",
-  "wikipedia.org", "reddit.com", "yelp.com",
-].map((d) => `-site:${d}`).join(" ");
-
-// Per-service query profiles: controls inurl: hints, forced price-context terms, and PDF likelihood
-interface ServiceProfile {
-  pricingPaths: string[];          // inurl: path hints for this service
-  priceContextTerms: string[];     // natural-language price terms that appear on real pages
-  specialtyTerms: string[];        // regulatory/industry terms found near prices
-  hasPdfSchedules: boolean;
-}
-
 const SERVICE_PROFILES: Record<string, ServiceProfile> = {
   "dot physical": {
     pricingPaths: ["dot", "cdl", "occupational", "employer-services"],
@@ -896,6 +833,39 @@ function classifySourceType(url: string): "direct_clinic" | "clinic_chain" | "ma
   if (shouldSkip) return "weak_reference";
   if (score >= 40 || PRICE_URL_PATHS.some((p) => url.toLowerCase().includes(p))) return "direct_clinic";
   return "direct_clinic";
+}
+
+function isHighConfidenceUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+    if (LOW_QUALITY_HOST_PATTERNS.some((pattern) => pattern.test(host))) return false;
+
+    const full = `${host}${parsed.pathname}`.toLowerCase();
+    const hasPriceHint = PRICE_PAGE_HINTS.some((hint) => full.includes(hint));
+    const isMarketplace = MARKETPLACE_DOMAINS.some((d) => host.includes(d));
+    const isClinicLike =
+      host.includes("clinic") ||
+      host.includes("medical") ||
+      host.includes("health") ||
+      host.includes("urgent") ||
+      host.includes("care");
+
+    return hasPriceHint || isMarketplace || isClinicLike;
+  } catch {
+    return false;
+  }
+}
+
+function shouldSkipWeakSnippet(snippet: string): boolean {
+  const text = snippet.toLowerCase();
+  return (
+    text.includes("average cost") ||
+    text.includes("typically ranges") ||
+    text.includes("may vary") ||
+    text.includes("estimate") ||
+    text.includes("general information")
+  );
 }
 
 function isHighConfidenceUrl(url: string): boolean {
