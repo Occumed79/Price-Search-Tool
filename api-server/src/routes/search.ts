@@ -178,10 +178,57 @@ router.post("/save-result", async (req, res) => {
     return;
   }
 
+  // Dedup: return existing record if already saved
+  const [existing] = await db
+    .select()
+    .from(savedResultsTable)
+    .where(eq(savedResultsTable.resultId, parsed.data.resultId))
+    .limit(1);
+
+  if (existing) {
+    res.json({
+      id: existing.id,
+      resultId: existing.resultId,
+      notes: existing.notes,
+      savedAt: existing.savedAt.toISOString(),
+    });
+    return;
+  }
+
   await db
     .update(priceResultsTable)
     .set({ isSaved: true })
     .where(eq(priceResultsTable.id, parsed.data.resultId));
+
+  // Geocode via Nominatim if result has no coordinates
+  const [priceResult] = await db
+    .select()
+    .from(priceResultsTable)
+    .where(eq(priceResultsTable.id, parsed.data.resultId))
+    .limit(1);
+
+  if (priceResult && !priceResult.latitude) {
+    const geoQuery = [priceResult.city, priceResult.state, priceResult.zipCode]
+      .filter(Boolean)
+      .join(", ") || priceResult.location;
+    if (geoQuery) {
+      try {
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(geoQuery)}&format=json&limit=1`,
+          { headers: { "User-Agent": "PostedPriceClinicSearch/1.0 (self-hosted)" } }
+        );
+        const geoData = await geoRes.json() as Array<{ lat: string; lon: string }>;
+        if (geoData.length > 0) {
+          await db
+            .update(priceResultsTable)
+            .set({ latitude: geoData[0].lat, longitude: geoData[0].lon })
+            .where(eq(priceResultsTable.id, parsed.data.resultId));
+        }
+      } catch (geoErr) {
+        logger.warn({ geoErr }, "Nominatim geocoding failed");
+      }
+    }
+  }
 
   const [saved] = await db
     .insert(savedResultsTable)

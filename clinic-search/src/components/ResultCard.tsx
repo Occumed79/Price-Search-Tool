@@ -136,6 +136,15 @@ export default function ResultCard({ result, onSave, onReview, isSaving }: Resul
               </a>
             )}
 
+            {result.sourceUrl && (
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors"
+              >
+                <Copy className="w-3 h-3" />
+                {copied ? "Copied!" : "Copy URL"}
+              </button>
+            )}
             <button
               onClick={handleCopy}
               className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors"
