@@ -8,6 +8,7 @@ import SearchPage from "@/pages/SearchPage";
 import SavedPage from "@/pages/SavedPage";
 import SearchesPage from "@/pages/SearchesPage";
 import SettingsPage from "@/pages/SettingsPage";
+import NetworkMapPage from "@/pages/NetworkMapPage";
 import HubNavBar from "@/components/HubNavBar";
 import NavBar from "@/components/NavBar";
 import { useLocation } from "wouter";
@@ -21,20 +22,24 @@ const queryClient = new QueryClient({
   },
 });
 
+const FULL_BLEED_ROUTES = ["/network-map"];
+
 function Layout() {
   const [location] = useLocation();
   const isHub = location === "/";
+  const isFullBleed = FULL_BLEED_ROUTES.some(r => location.startsWith(r));
 
   return (
     <div className={`min-h-screen ${isHub ? "hub-bg" : "atmo-bg"} text-foreground flex flex-col`}>
-      {isHub ? <HubNavBar /> : <NavBar />}
-      <main className="flex-1">
+      {!isFullBleed && (isHub ? <HubNavBar /> : <NavBar />)}
+      <main className={isFullBleed ? "flex-1 flex flex-col" : "flex-1"}>
         <Switch>
           <Route path="/" component={HubPage} />
           <Route path="/search" component={SearchPage} />
           <Route path="/saved" component={SavedPage} />
           <Route path="/searches" component={SearchesPage} />
           <Route path="/settings" component={SettingsPage} />
+          <Route path="/network-map" component={NetworkMapPage} />
           <Route component={NotFound} />
         </Switch>
       </main>
