@@ -307,6 +307,17 @@ router.delete("/saved-results/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+router.patch("/saved-results/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+  const { notes } = req.body as { notes?: string };
+  await db.update(savedResultsTable).set({ notes: notes ?? null }).where(eq(savedResultsTable.id, id));
+  res.json({ success: true });
+});
+
 router.post("/manual-review", async (req, res) => {
   const parsed = AddManualReviewBody.safeParse(req.body);
   if (!parsed.success) {
