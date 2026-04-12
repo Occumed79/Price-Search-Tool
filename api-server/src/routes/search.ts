@@ -255,6 +255,7 @@ router.get("/saved-results", async (_req, res) => {
       id: row.saved_results.id,
       resultId: row.saved_results.resultId,
       notes: row.saved_results.notes,
+      priceBreakdown: row.saved_results.priceBreakdown,
       savedAt: row.saved_results.savedAt.toISOString(),
       result: row.price_results
         ? {
@@ -312,17 +313,20 @@ router.patch("/saved-results/:id", async (req, res) => {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
-  const { notes } = req.body as { notes?: string };
+  const { notes, priceBreakdown } = req.body as { notes?: string; priceBreakdown?: string };
+  const updateData: Record<string, unknown> = {};
+  if (notes !== undefined) updateData.notes = notes || null;
+  if (priceBreakdown !== undefined) updateData.priceBreakdown = priceBreakdown || null;
   const [updated] = await db
     .update(savedResultsTable)
-    .set({ notes: notes ?? null })
+    .set(updateData)
     .where(eq(savedResultsTable.id, id))
     .returning();
   if (!updated) {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  res.json({ id: updated.id, notes: updated.notes });
+  res.json({ id: updated.id, notes: updated.notes, priceBreakdown: updated.priceBreakdown });
 });
 
 
