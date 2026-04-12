@@ -20,6 +20,9 @@ const BROWSER_USE_SEARCH_URL = process.env.BROWSER_USE_SEARCH_URL;
 const OLOSTEP_SEARCH_URL = process.env.OLOSTEP_SEARCH_URL;
 const CLOD_SEARCH_URL = process.env.CLOD_SEARCH_URL;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const LANSEARCH_API_KEY = process.env.LANSEARCH_API_KEY;
+const JINA_API_KEY = process.env.JINA_API_KEY;
+const OCR_SPACE_API_KEY = process.env.OCR_SPACE_API_KEY;
 const OPENROUTER_KEY = process.env.OPENROUTER_KEY ?? process.env.OPENROUTER_API_KEY;
 
 type SearchHit = { url: string; title: string; snippet: string };
@@ -442,6 +445,47 @@ async function searchWithExa(query: string): Promise<SearchHit[]> {
   }
 }
 
+async function searchWithLanSearch(query: string): Promise<SearchHit[]> {
+  if (!LANSEARCH_API_KEY) return [];
+  try {
+    const response = await fetchWithTimeout("https://api.lansearch.com/search", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LANSEARCH_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ q: query, num: 10 }),
+    }, 8000);
+    if (!response.ok) return [];
+    const data = await response.json() as { results?: Array<{ url?: string; title?: string; snippet?: string; description?: string }> };
+    return normalizeSearchHits(data.results || []);
+  } catch (e) {
+    logger.error({ err: e }, "LanSearch error");
+    return [];
+  }
+}
+
+async function searchWithJina(query: string): Promise<SearchHit[]> {
+  if (!JINA_API_KEY) return [];
+  try {
+    const encoded = encodeURIComponent(query);
+    const response = await fetchWithTimeout(`https://s.jina.ai/${encoded}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${JINA_API_KEY}`,
+        Accept: "application/json",
+        "X-Return-Format": "json",
+      },
+    }, 10000);
+    if (!response.ok) return [];
+    const data = await response.json() as { data?: Array<{ url?: string; title?: string; description?: string; content?: string }> };
+    return normalizeSearchHits(data.data || []);
+  } catch (e) {
+    logger.error({ err: e }, "Jina search error");
+    return [];
+  }
+}
+
 async function searchWithGenericProvider(
   provider: "browseai" | "browseruse" | "olostep" | "clod",
   query: string,
@@ -520,9 +564,79 @@ async function fetchPageWithFirecrawl(url: string): Promise<{ text: string; isPd
   }
 }
 
+async function fetchPageWithJina(url: string): Promise<{ text: string; isPdf: boolean } | null> {
+  if (!JINA_API_KEY) return null;
+  // Don't use Jina for PDFs — OCR.space handles those
+  if (url.toLowerCase().endsWith(".pdf")) return null;
+  try {
+    const encoded = encodeURIComponent(url);
+    const response = await fetchWithTimeout(`https://r.jina.ai/${encoded}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${JINA_API_KEY}`,
+        Accept: "application/json",
+        "X-Return-Format": "markdown",
+        "X-Timeout": "8",
+      },
+    }, 10000);
+    if (!response.ok) return null;
+    const text = await response.text();
+    if (!text || text.length < 100) return null;
+    return { text: text.slice(0, 20000), isPdf: false };
+  } catch (e) {
+    logger.error({ err: e }, "Jina reader error");
+    return null;
+  }
+}
+
+async function fetchPageWithOcrSpace(url: string): Promise<{ text: string; isPdf: boolean } | null> {
+  if (!OCR_SPACE_API_KEY) return null;
+  // Only use for PDFs
+  const isPdf = url.toLowerCase().endsWith(".pdf") || url.toLowerCase().includes(".pdf");
+  if (!isPdf) return null;
+  try {
+    const body = new URLSearchParams({
+      apikey: OCR_SPACE_API_KEY,
+      url,
+      language: "eng",
+      isTable: "true",
+      scale: "true",
+      OCREngine: "2",
+    });
+    const response = await fetchWithTimeout("https://api.ocr.space/parse/image", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    }, 20000);
+    if (!response.ok) return null;
+    const data = await response.json() as {
+      ParsedResults?: Array<{ ParsedText?: string }>;
+      IsErroredOnProcessing?: boolean;
+    };
+    if (data.IsErroredOnProcessing) return null;
+    const text = (data.ParsedResults || []).map(r => r.ParsedText || "").join("\n");
+    if (!text || text.length < 50) return null;
+    return { text: text.slice(0, 20000), isPdf: true };
+  } catch (e) {
+    logger.error({ err: e }, "OCR.space error");
+    return null;
+  }
+}
+
 async function fetchPage(url: string): Promise<{ text: string; isPdf: boolean } | null> {
   const firecrawlResult = await fetchPageWithFirecrawl(url);
   if (firecrawlResult) return firecrawlResult;
+
+  // For PDFs: try OCR.space first
+  const isPdfUrl = url.toLowerCase().endsWith(".pdf") || url.toLowerCase().includes(".pdf?");
+  if (isPdfUrl) {
+    const ocrResult = await fetchPageWithOcrSpace(url);
+    if (ocrResult) return ocrResult;
+  }
+
+  // For HTML pages: try Jina reader
+  const jinaResult = await fetchPageWithJina(url);
+  if (jinaResult) return jinaResult;
 
   try {
     const controller = new AbortController();
@@ -541,7 +655,8 @@ async function fetchPage(url: string): Promise<{ text: string; isPdf: boolean } 
     const isPdf = contentType.includes("pdf") || url.toLowerCase().endsWith(".pdf");
 
     if (isPdf) {
-      return { text: "[PDF document — price extraction attempted]", isPdf: true };
+      // OCR.space not available or failed — log stub
+      return { text: "[PDF document — no OCR key configured]", isPdf: true };
     }
 
     const text = await response.text();
@@ -972,7 +1087,9 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
       (BROWSE_AI_API_KEY && BROWSE_AI_SEARCH_URL) ||
       (BROWSER_USE_API_KEY && BROWSER_USE_SEARCH_URL) ||
       (OLOSTEP_API_KEY && OLOSTEP_SEARCH_URL) ||
-      (CLOD_API_KEY && CLOD_SEARCH_URL),
+      (CLOD_API_KEY && CLOD_SEARCH_URL) ||
+      LANSEARCH_API_KEY ||
+      JINA_API_KEY,
     );
 
     for (const query of queries) {
@@ -991,6 +1108,8 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
       if (BROWSER_USE_API_KEY && BROWSER_USE_SEARCH_URL) providerTasks.push({ name: "browseruse", run: () => searchWithGenericProvider("browseruse", query) });
       if (OLOSTEP_API_KEY && OLOSTEP_SEARCH_URL) providerTasks.push({ name: "olostep", run: () => searchWithGenericProvider("olostep", query) });
       if (CLOD_API_KEY && CLOD_SEARCH_URL) providerTasks.push({ name: "clod", run: () => searchWithGenericProvider("clod", query) });
+      if (LANSEARCH_API_KEY) providerTasks.push({ name: "lansearch", run: () => searchWithLanSearch(query) });
+      if (JINA_API_KEY) providerTasks.push({ name: "jina", run: () => searchWithJina(query) });
 
       const providerNames = providerTasks.map((task) => task.name);
       const results: SearchHit[] = [];
