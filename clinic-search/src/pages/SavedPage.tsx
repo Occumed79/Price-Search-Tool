@@ -115,6 +115,8 @@ export default function SavedPage() {
   const [savingBreakdown, setSavingBreakdown] = useState<Set<number>>(new Set());
   const [breakdownOpen, setBreakdownOpen] = useState<Set<number>>(new Set());
 
+  const [geocodingActive, setGeocodingActive] = useState(false);
+
   async function handleDelete(id: number) {
     await deleteSaved.mutateAsync({ id });
     queryClient.invalidateQueries({ queryKey: getListSavedResultsQueryKey() });
@@ -227,6 +229,24 @@ export default function SavedPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedResults.length]);
 
+  // Backfill geocoordinates for saved results that were saved before geocoding was added
+  useEffect(() => {
+    fetch("/api/geocode-backfill", { method: "POST" })
+      .then((r) => r.json())
+      .then((data: { queued: number }) => {
+        if (data.queued > 0) {
+          setGeocodingActive(true);
+          const delay = Math.min(data.queued * 1200 + 2000, 30000);
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: getListSavedResultsQueryKey() });
+            setGeocodingActive(false);
+          }, delay);
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const withCoords = savedResults.filter(
     (s) => s.result && typeof s.result.latitude === "number" && typeof s.result.longitude === "number",
   );
@@ -243,6 +263,11 @@ export default function SavedPage() {
           <h1 className="text-base font-semibold text-white/90">Saved Results</h1>
           <p className="text-xs text-white/40">{savedResults.length} saved price findings</p>
         </div>
+        {geocodingActive && (
+          <span className="flex items-center gap-1.5 text-[11px] text-white/40">
+            <Loader2 className="w-3 h-3 animate-spin" />Geocoding locations...
+          </span>
+        )}
         {selectedIds.size >= 2 && (
           <button onClick={() => setCompareOpen(true)}
             className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 text-xs font-medium hover:bg-cyan-500/20 transition-colors">

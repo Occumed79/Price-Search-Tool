@@ -8,7 +8,7 @@ import {
   domainRulesTable,
   searchPresetsTable,
 } from "@workspace/db";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc, count, isNull } from "drizzle-orm";
 import {
   StartSearchBody,
   SaveResultBody,
@@ -506,6 +506,45 @@ router.get("/export/:searchId", async (req, res) => {
       foundAt: r.foundAt.toISOString(),
     })),
   });
+});
+
+router.post("/geocode-backfill", async (_req, res) => {
+  const rows = await db
+    .select({
+      id: priceResultsTable.id,
+      location: priceResultsTable.location,
+      city: priceResultsTable.city,
+      state: priceResultsTable.state,
+      zipCode: priceResultsTable.zipCode,
+    })
+    .from(savedResultsTable)
+    .innerJoin(priceResultsTable, eq(savedResultsTable.resultId, priceResultsTable.id))
+    .where(isNull(priceResultsTable.latitude));
+
+  res.json({ queued: rows.length });
+
+  void (async () => {
+    for (const row of rows) {
+      const geoQuery = [row.city, row.state, row.zipCode].filter(Boolean).join(", ") || row.location;
+      if (!geoQuery) continue;
+      try {
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(geoQuery)}&format=json&limit=1`,
+          { headers: { "User-Agent": "PostedPriceClinicSearch/1.0 (self-hosted)" } },
+        );
+        const geoData = (await geoRes.json()) as Array<{ lat: string; lon: string }>;
+        if (geoData.length > 0) {
+          await db
+            .update(priceResultsTable)
+            .set({ latitude: geoData[0].lat, longitude: geoData[0].lon })
+            .where(eq(priceResultsTable.id, row.id));
+        }
+      } catch (geoErr) {
+        logger.warn({ geoErr }, "Geocode backfill failed for id=" + row.id);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+    }
+  })();
 });
 
 router.get("/stats", async (_req, res) => {
