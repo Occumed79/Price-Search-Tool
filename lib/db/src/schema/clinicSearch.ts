@@ -67,6 +67,7 @@ export const savedResultsTable = pgTable("saved_results", {
   id: serial("id").primaryKey(),
   resultId: integer("result_id").notNull().references(() => priceResultsTable.id),
   notes: text("notes"),
+  priceBreakdown: text("price_breakdown"),
   savedAt: timestamp("saved_at").notNull().defaultNow(),
 });
 
