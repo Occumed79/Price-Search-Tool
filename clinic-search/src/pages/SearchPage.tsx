@@ -102,8 +102,11 @@ export default function SearchPage() {
   const [form, setForm] = useState<SearchForm>(defaultForm);
   const [currentSearchId, setCurrentSearchId] = useState<number | null>(null);
   const [shouldPoll, setShouldPoll] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
-  const [debugMode] = useState(false);
+  const [showFilters, setShowFilters] = useState(() => true);
+  const [debugMode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("debug") === "1" || params.get("debug") === "true";
+  });
 
   const queryClient = useQueryClient();
   const [location] = useLocation();
@@ -121,6 +124,10 @@ export default function SearchPage() {
         setCurrentSearchId(id);
         setShouldPoll(true); // let the existing poll logic fetch it once
       }
+    } else {
+      // If no search id is present in the URL, ensure the form is interactive.
+      setShouldPoll(false);
+      setCurrentSearchId(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
