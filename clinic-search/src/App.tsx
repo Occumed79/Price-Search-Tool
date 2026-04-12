@@ -3,11 +3,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import HubPage from "@/pages/HubPage";
 import SearchPage from "@/pages/SearchPage";
 import SavedPage from "@/pages/SavedPage";
 import SearchesPage from "@/pages/SearchesPage";
 import SettingsPage from "@/pages/SettingsPage";
+import HubNavBar from "@/components/HubNavBar";
 import NavBar from "@/components/NavBar";
+import { useLocation } from "wouter";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,15 +21,24 @@ const queryClient = new QueryClient({
   },
 });
 
-function Router() {
+function Layout() {
+  const [location] = useLocation();
+  const isHub = location === "/";
+
   return (
-    <Switch>
-      <Route path="/" component={SearchPage} />
-      <Route path="/saved" component={SavedPage} />
-      <Route path="/searches" component={SearchesPage} />
-      <Route path="/settings" component={SettingsPage} />
-      <Route component={NotFound} />
-    </Switch>
+    <div className={`min-h-screen ${isHub ? "hub-bg" : "atmo-bg"} text-foreground flex flex-col`}>
+      {isHub ? <HubNavBar /> : <NavBar />}
+      <main className="flex-1">
+        <Switch>
+          <Route path="/" component={HubPage} />
+          <Route path="/search" component={SearchPage} />
+          <Route path="/saved" component={SavedPage} />
+          <Route path="/searches" component={SearchesPage} />
+          <Route path="/settings" component={SettingsPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+    </div>
   );
 }
 
@@ -35,12 +47,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <div className="min-h-screen atmo-bg text-foreground flex flex-col">
-            <NavBar />
-            <main className="flex-1">
-              <Router />
-            </main>
-          </div>
+          <Layout />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>
