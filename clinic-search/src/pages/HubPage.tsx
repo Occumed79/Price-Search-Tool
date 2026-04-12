@@ -20,6 +20,18 @@ const portals = [
     active: true,
   },
   {
+    id: "network-map",
+    label: "Network Map",
+    description: "Visualize provider coverage and geographic distribution across regions.",
+    icon: Globe,
+    color: "from-emerald-400/30 to-teal-300/20",
+    border: "border-emerald-400/30",
+    glow: "shadow-emerald-400/20",
+    iconColor: "text-emerald-300",
+    href: "/network-map",
+    active: true,
+  },
+  {
     id: "provider-directory",
     label: "Provider Directory",
     description: "Browse and manage the full network of Occu-Med affiliated providers.",
@@ -36,10 +48,10 @@ const portals = [
     label: "Analytics & Reporting",
     description: "Track utilization, cost trends, and network performance metrics.",
     icon: BarChart2,
-    color: "from-emerald-400/25 to-teal-300/15",
-    border: "border-emerald-400/25",
-    glow: "shadow-emerald-400/15",
-    iconColor: "text-emerald-300",
+    color: "from-blue-400/25 to-indigo-300/15",
+    border: "border-blue-400/25",
+    glow: "shadow-blue-400/15",
+    iconColor: "text-blue-300",
     href: "#",
     active: false,
   },
@@ -52,18 +64,6 @@ const portals = [
     border: "border-amber-400/25",
     glow: "shadow-amber-400/15",
     iconColor: "text-amber-300",
-    href: "#",
-    active: false,
-  },
-  {
-    id: "network-map",
-    label: "Network Map",
-    description: "Visualize provider coverage and geographic distribution across regions.",
-    icon: Globe,
-    color: "from-rose-400/25 to-pink-300/15",
-    border: "border-rose-400/25",
-    glow: "shadow-rose-400/15",
-    iconColor: "text-rose-300",
     href: "#",
     active: false,
   },
@@ -143,7 +143,7 @@ export default function HubPage() {
               `}
             >
               <div className="p-6 flex flex-col gap-4 h-full">
-                {/* Icon + coming soon badge */}
+                {/* Icon + badge */}
                 <div className="flex items-start justify-between">
                   <div className={`w-11 h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center ${portal.iconColor}`}>
                     <Icon className="w-5 h-5" />
@@ -151,6 +151,11 @@ export default function HubPage() {
                   {!portal.active && (
                     <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-white/8 border border-white/12 text-white/40">
                       Coming Soon
+                    </span>
+                  )}
+                  {portal.active && portal.id !== "web-price-search" && (
+                    <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-400">
+                      Live
                     </span>
                   )}
                 </div>
