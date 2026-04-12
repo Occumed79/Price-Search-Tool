@@ -55,7 +55,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Dark mode by default — MacOS Tahoe Glass */
+/* ── Base tokens (dark / tool pages) ── */
 :root {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
@@ -63,19 +63,14 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  /* Deep atmospheric navy background */
   --background: 220 40% 6%;
   --foreground: 210 40% 95%;
-
   --border: 217 32% 18%;
   --input: 217 32% 22%;
   --ring: 198 90% 60%;
-
-  /* Glass card surfaces */
   --card: 220 35% 9%;
   --card-foreground: 210 40% 92%;
   --card-border: 217 32% 20%;
-
   --sidebar: 220 38% 7%;
   --sidebar-foreground: 210 40% 90%;
   --sidebar-border: 217 32% 15%;
@@ -84,33 +79,24 @@
   --sidebar-accent: 220 35% 12%;
   --sidebar-accent-foreground: 210 40% 85%;
   --sidebar-ring: 198 90% 60%;
-
   --popover: 220 38% 10%;
   --popover-foreground: 210 40% 92%;
   --popover-border: 217 32% 20%;
-
-  /* Cyan/blue primary accent */
   --primary: 198 90% 55%;
   --primary-foreground: 220 40% 6%;
-
   --secondary: 220 35% 15%;
   --secondary-foreground: 210 35% 82%;
-
   --muted: 220 30% 13%;
   --muted-foreground: 210 25% 55%;
-
   --accent: 217 70% 35%;
   --accent-foreground: 210 40% 95%;
-
   --destructive: 0 72% 55%;
   --destructive-foreground: 0 0% 100%;
-
   --chart-1: 198 90% 55%;
   --chart-2: 160 70% 50%;
   --chart-3: 35 90% 60%;
   --chart-4: 280 65% 65%;
   --chart-5: 0 72% 55%;
-
   --app-font-sans: 'Inter', system-ui, sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: 'SF Mono', Menlo, monospace;
@@ -120,7 +106,6 @@
   --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.7);
   --shadow-xl: 0 16px 48px rgba(0,0,0,0.8);
-
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-accent-border: hsl(var(--sidebar-accent));
   --primary-border: hsl(var(--primary));
@@ -136,7 +121,6 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-
   --background: 220 40% 6%;
   --foreground: 210 40% 95%;
   --border: 217 32% 18%;
@@ -171,7 +155,6 @@
   --chart-3: 35 90% 60%;
   --chart-4: 280 65% 65%;
   --chart-5: 0 72% 55%;
-
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-accent-border: hsl(var(--sidebar-accent));
   --primary-border: hsl(var(--primary));
@@ -186,7 +169,9 @@
   body { @apply font-sans antialiased bg-background text-foreground; }
 }
 
-/* Glass surface utility */
+/* ─────────────────────────────────────────────────────────────────
+   TOOL PAGES — existing dark glass (unchanged)
+───────────────────────────────────────────────────────────────── */
 .glass {
   background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(20px) saturate(180%);
@@ -222,13 +207,11 @@
   box-shadow: 0 0 0 2px hsl(198 90% 55% / 0.15);
 }
 
-/* Price hit highlight */
 .price-hit {
   background: rgba(34, 197, 94, 0.08);
   border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
-/* Atmospheric background gradient */
 .atmo-bg {
   background:
     radial-gradient(ellipse at 20% 10%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
@@ -236,13 +219,102 @@
     hsl(220 40% 6%);
 }
 
-/* Source type badge colors */
-.badge-direct { background: rgba(34, 197, 94, 0.15); color: rgb(134, 239, 172); border-color: rgba(34, 197, 94, 0.25); }
-.badge-chain { background: rgba(56, 189, 248, 0.15); color: rgb(125, 211, 252); border-color: rgba(56, 189, 248, 0.25); }
+.badge-direct    { background: rgba(34, 197, 94, 0.15);  color: rgb(134, 239, 172); border-color: rgba(34, 197, 94, 0.25); }
+.badge-chain     { background: rgba(56, 189, 248, 0.15);  color: rgb(125, 211, 252); border-color: rgba(56, 189, 248, 0.25); }
 .badge-marketplace { background: rgba(168, 85, 247, 0.15); color: rgb(216, 180, 254); border-color: rgba(168, 85, 247, 0.25); }
-.badge-pdf { background: rgba(251, 146, 60, 0.15); color: rgb(253, 186, 116); border-color: rgba(251, 146, 60, 0.25); }
-.badge-weak { background: rgba(100, 116, 139, 0.15); color: rgb(148, 163, 184); border-color: rgba(100, 116, 139, 0.25); }
+.badge-pdf       { background: rgba(251, 146, 60, 0.15);  color: rgb(253, 186, 116); border-color: rgba(251, 146, 60, 0.25); }
+.badge-weak      { background: rgba(100, 116, 139, 0.15); color: rgb(148, 163, 184); border-color: rgba(100, 116, 139, 0.25); }
 
+/* ─────────────────────────────────────────────────────────────────
+   HUB PAGE — macOS Tahoe luminous glass (light + glowing)
+───────────────────────────────────────────────────────────────── */
+
+/* Background: deep twilight-sky gradient, very luminous */
+.hub-bg {
+  background:
+    radial-gradient(ellipse at 50% -10%,  rgba(186, 230, 253, 0.22) 0%,  transparent 55%),
+    radial-gradient(ellipse at 15%  80%,  rgba(165, 180, 252, 0.14) 0%,  transparent 45%),
+    radial-gradient(ellipse at 85%  75%,  rgba(103, 232, 249, 0.12) 0%,  transparent 45%),
+    radial-gradient(ellipse at 50%  50%,  rgba(30,  41,  82, 0.95)  0%,  transparent 100%),
+    linear-gradient(160deg, #0d1a3a 0%, #0a1628 50%, #060f22 100%);
+  min-height: 100vh;
+}
+
+/* Logo glass pill */
+.hub-logo-wrap {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 0 60px rgba(186, 230, 253, 0.08);
+}
+
+/* Title: crisp white with subtle text glow */
+.hub-title {
+  background: linear-gradient(135deg, #ffffff 0%, #bae6fd 50%, #e0f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 24px rgba(186, 230, 253, 0.5));
+  letter-spacing: -0.02em;
+}
+
+/* Subtitle: spaced caps, muted sky */
+.hub-subtitle {
+  color: rgba(186, 230, 253, 0.55);
+  letter-spacing: 0.2em;
+}
+
+/* Divider: glowing sky line */
+.hub-divider {
+  background: linear-gradient(90deg, transparent, rgba(186, 230, 253, 0.4), transparent);
+  height: 1px;
+}
+
+/* Portal cards: luminous glass panels */
+.hub-card {
+  background: rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.25) inset,
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sheen: soft top-left light reflection like Tahoe window chrome */
+.hub-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.01) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Hover glow lift */
+.hub-card:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.25) inset,
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(186, 230, 253, 0.08);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Utility layers (unchanged)
+───────────────────────────────────────────────────────────────── */
 @layer utilities {
   input[type="search"]::-webkit-search-cancel-button { @apply hidden; }
 
@@ -262,6 +334,6 @@
     content: ""; pointer-events: none; position: absolute; inset: 0px;
     border-radius: inherit; z-index: 999;
   }
-  .hover-elevate:hover:not(.no-default-hover-elevate)::after { background-color: var(--elevate-1); }
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after  { background-color: var(--elevate-1); }
   .active-elevate:active:not(.no-default-active-elevate)::after { background-color: var(--elevate-2); }
 }
