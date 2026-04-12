@@ -128,27 +128,70 @@ const LOW_QUALITY_HOST_PATTERNS = [
 ];
 const PRICE_PAGE_HINTS = ["price", "pricing", "self-pay", "cash", "fee", "fees", "transparency", "cost"];
 
+// ── Surgical query builder ────────────────────────────────────────────────────
+// Strategy: find pages WHERE prices are posted, not pages ABOUT prices.
+// Operators used:
+//   inurl:  — URL must contain path segment (targets structural pricing pages)
+//   intitle: — Page title must match (fee schedule / cash price pages)
+//   "$"      — Forces a dollar amount to appear on the page
+//   filetype:pdf — Fee schedule PDFs published by clinics
+//   -site:   — Excludes aggregators and health-info noise at Google level
 function buildQueries(params: SearchParams): string[] {
   const { location, clinicType, serviceType, freeText } = params;
-  const queries: string[] = [];
+  const neg = QUERY_NEGATIVES;
+  const profile = getServiceProfile(serviceType);
   const aliases = SERVICE_ALIASES[serviceType.toLowerCase()] || [];
-  const allServices = [serviceType, ...aliases];
+  const primary = serviceType;
+  const alt = aliases[0];
+  const queries: string[] = [];
 
-  for (const service of allServices.slice(0, 2)) {
-    queries.push(`"${service}" price ${location} ${clinicType} site:* self-pay cash`);
-    queries.push(`${service} cash price ${location} ${clinicType}`);
-    queries.push(`${service} posted price fee schedule ${location}`);
-    queries.push(`${clinicType} ${location} ${service} "$" pricing`);
+  // ── TIER A: inurl: structural operators (highest precision) ─────────────────
+  // These find pages whose URL literally contains a pricing path segment.
+  // Small clinics that built /self-pay or /fee-schedule pages match strongly;
+  // health-info articles and aggregators do not.
+  queries.push(`"${primary}" inurl:self-pay "${location}" "$" ${neg}`);
+  queries.push(`"${primary}" inurl:fee-schedule "${location}" ${neg}`);
+  queries.push(`"${primary}" (inurl:pricing OR inurl:cash-price OR inurl:cash-pay) "${location}" "$" ${neg}`);
+
+  // Service-specific path hints from profile
+  for (const path of profile.pricingPaths.slice(0, 2)) {
+    queries.push(`"${primary}" inurl:${path} "${location}" "$" ${clinicType} ${neg}`);
   }
 
-  queries.push(`${serviceType} price ${location} PDF fee schedule`);
-  queries.push(`${clinicType} chain ${serviceType} pricing page`);
+  // ── TIER B: intitle: operators ──────────────────────────────────────────────
+  // Targets pages whose HTML <title> declares them as fee schedule / pricing pages.
+  queries.push(`intitle:"fee schedule" "${primary}" "${location}" ${clinicType} ${neg}`);
+  queries.push(`(intitle:"self-pay" OR intitle:"cash price" OR intitle:"cash pay") "${primary}" "${location}" "$" ${neg}`);
 
+  // ── TIER C: Dollar-forced queries with negative exclusions ──────────────────
+  // The "$" literal forces Google to surface pages that literally contain a price.
+  // Health-info articles rarely survive this filter.
+  queries.push(`"${primary}" "self-pay" "$" "${location}" ${clinicType} ${neg}`);
+  queries.push(`"${primary}" "cash price" "$" "${location}" ${neg}`);
+  queries.push(`"${primary}" "posted price" "${location}" ${neg}`);
+
+  // ── TIER D: Service-specific price context terms ────────────────────────────
+  for (const term of profile.priceContextTerms.slice(0, 2)) {
+    queries.push(`${term} "${location}" ${neg}`);
+  }
+
+  // ── TIER E: PDF fee schedules ───────────────────────────────────────────────
+  if (profile.hasPdfSchedules || params.includePdfs) {
+    queries.push(`"${primary}" filetype:pdf "fee schedule" OR "cash price" "${location}" ${neg}`);
+  }
+
+  // ── TIER F: Alias terms ─────────────────────────────────────────────────────
+  if (alt && alt !== primary) {
+    queries.push(`"${alt}" inurl:self-pay "${location}" "$" ${neg}`);
+    queries.push(`"${alt}" "self-pay" "$" "${location}" ${neg}`);
+  }
+
+  // ── TIER G: Free-text override ──────────────────────────────────────────────
   if (freeText) {
-    queries.push(`${freeText} ${location} price posted`);
+    queries.push(`${freeText} (inurl:pricing OR inurl:self-pay) "${location}" "$" ${neg}`);
   }
 
-  return queries.slice(0, 6);
+  return [...new Set(queries)].slice(0, 10);
 }
 
 async function searchWithSerper(query: string): Promise<SearchHit[]> {
@@ -587,12 +630,203 @@ async function aiExtractPrice(text: string, serviceType: string, clinicType: str
   return aiExtractPriceWithOpenRouter(text, serviceType, clinicType);
 }
 
+// ── URL confidence scorer ─────────────────────────────────────────────────────
+// Returns a numeric confidence score (0-100) for how likely a URL is to contain
+// a directly-posted clinic price. shouldSkip=true means drop before fetching.
+function scoreUrl(url: string, title = ""): { score: number; shouldSkip: boolean; reason: string } {
+  let hostname: string;
+  let pathname: string;
+  try {
+    const parsed = new URL(url);
+    hostname = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    pathname = parsed.pathname.toLowerCase();
+  } catch {
+    return { score: 0, shouldSkip: true, reason: "invalid URL" };
+  }
+
+  // Hard skip: domains that never have directly-posted clinic prices
+  for (const d of SKIP_DOMAINS) {
+    if (hostname === d || hostname.endsWith(`.${d}`)) {
+      return { score: 0, shouldSkip: true, reason: `skip domain: ${d}` };
+    }
+  }
+
+  let score = 30;
+  const reasons: string[] = [];
+
+  // Strong positive: URL path is a structural pricing page
+  const pricePath = PRICE_URL_PATHS.find((p) => pathname.includes(p));
+  if (pricePath) { score += 40; reasons.push(`pricing path: ${pricePath}`); }
+
+  // Positive: PDF (often a published fee schedule)
+  if (url.toLowerCase().endsWith(".pdf")) { score += 20; reasons.push("PDF"); }
+
+  // Positive: clinic-type terms in domain name
+  if (/clinic|medical|urgent|care|health|med\b|doc|physician|practice|wellness/.test(hostname)) {
+    score += 15; reasons.push("clinic domain");
+  }
+
+  // Positive: pricing language in page title
+  const titleLow = title.toLowerCase();
+  if (/fee\s*schedule|self[- ]pay|cash\s*price|pricing|transparency|price\s*list/.test(titleLow)) {
+    score += 15; reasons.push("pricing title");
+  }
+
+  // Very positive: dollar amount visible in title
+  if (/\$\d{2,4}/.test(title)) { score += 25; reasons.push("price in title"); }
+
+  // Negative: non-pricing path
+  const badPath = NON_PRICE_URL_PATHS.find((p) => pathname.includes(p));
+  if (badPath) { score -= 30; reasons.push(`bad path: ${badPath}`); }
+
+  // Negative: very deep paths are usually blog articles
+  if (pathname.split("/").filter(Boolean).length >= 4) { score -= 15; reasons.push("deep path"); }
+
+  score = Math.max(0, Math.min(100, score));
+  return { score, shouldSkip: score < 15, reason: reasons.join("; ") || "direct site" };
+}
+
+// ── Snippet price signal detector ─────────────────────────────────────────────
+// Called BEFORE fetchPage() to avoid spending fetch budget on pages whose search
+// snippet shows no evidence of a real posted price.
+const SNIPPET_PRICE_SIGNALS = [
+  /\$\s*\d{2,4}/,
+  /\d{2,4}\s*(?:dollars?|usd)/i,
+  /cash\s+(?:price|pay|rate)/i,
+  /self[-\s]pay\s+(?:rate|price|fee|cost)/i,
+  /\bfee\s+schedule\b/i,
+  /posted\s+price/i,
+  /price\s+transparency/i,
+  /no\s+insurance\s+(?:needed|required)/i,
+  /flat\s+(?:fee|rate)/i,
+  /uninsured\s+(?:rate|price|fee)/i,
+];
+
+const SNIPPET_DISQUALIFIERS = [
+  /average\s+cost/i,
+  /typically\s+range/i,
+  /how\s+much\s+does\s+.{0,40}\s+cost/i,
+  /health\s+insurance\s+coverage/i,
+  /in\s+this\s+article/i,
+  /symptoms?\s+(?:include|of)/i,
+];
+
+function snippetHasPriceSignal(snippet: string, title: string): boolean {
+  const combined = `${title} ${snippet}`;
+  if (SNIPPET_DISQUALIFIERS.some((p) => p.test(combined))) return false;
+  return SNIPPET_PRICE_SIGNALS.some((p) => p.test(combined));
+}
+
+// ── Direct domain path probing ────────────────────────────────────────────────
+// Once a clinic domain is found via search, probe known pricing URL paths
+// directly. Finds pricing pages that exist but aren't in search index for the
+// current query.
+const PROBE_PATHS = [
+  "/pricing", "/prices", "/fee-schedule", "/fees",
+  "/self-pay", "/self-pay-prices", "/cash-prices", "/cash-price",
+  "/transparency", "/price-transparency", "/patient-pricing",
+  "/services/pricing", "/services/fees", "/patient-resources/pricing",
+  "/self-pay-rates.pdf", "/fee-schedule.pdf", "/prices.pdf",
+];
+
+async function probeDomainForPricingPages(origin: string): Promise<string[]> {
+  const settled = await Promise.allSettled(
+    PROBE_PATHS.map(async (path): Promise<string | null> => {
+      const url = `${origin}${path}`;
+      try {
+        const resp = await fetchWithTimeout(url, {
+          method: "HEAD",
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; ClinicPriceBot/1.0)" },
+        }, 3000);
+        if (!resp.ok) return null;
+        const finalUrl = resp.url || url;
+        const finalPath = new URL(finalUrl).pathname.toLowerCase();
+        if (PRICE_URL_PATHS.some((p) => finalPath.includes(p)) || finalUrl.endsWith(".pdf")) {
+          return finalUrl;
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return settled.flatMap((r) => (r.status === "fulfilled" && r.value ? [r.value] : []));
+}
+
 function classifySourceType(url: string): "direct_clinic" | "clinic_chain" | "marketplace" | "pdf" | "weak_reference" {
   if (url.toLowerCase().endsWith(".pdf")) return "pdf";
   if (MARKETPLACE_DOMAINS.some((d) => url.includes(d))) return "marketplace";
   if (TRANSPARENT_DOMAINS.some((d) => url.includes(d) && !MARKETPLACE_DOMAINS.includes(d))) return "clinic_chain";
-  if (url.includes("location") || url.includes("clinic") || url.includes("office")) return "direct_clinic";
-  return "weak_reference";
+  const { score, shouldSkip } = scoreUrl(url);
+  if (shouldSkip) return "weak_reference";
+  if (score >= 40 || PRICE_URL_PATHS.some((p) => url.toLowerCase().includes(p))) return "direct_clinic";
+  return "direct_clinic";
+}
+
+function isHighConfidenceUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+    if (LOW_QUALITY_HOST_PATTERNS.some((pattern) => pattern.test(host))) return false;
+
+    const full = `${host}${parsed.pathname}`.toLowerCase();
+    const hasPriceHint = PRICE_PAGE_HINTS.some((hint) => full.includes(hint));
+    const isMarketplace = MARKETPLACE_DOMAINS.some((d) => host.includes(d));
+    const isClinicLike =
+      host.includes("clinic") ||
+      host.includes("medical") ||
+      host.includes("health") ||
+      host.includes("urgent") ||
+      host.includes("care");
+
+    return hasPriceHint || isMarketplace || isClinicLike;
+  } catch {
+    return false;
+  }
+}
+
+function shouldSkipWeakSnippet(snippet: string): boolean {
+  const text = snippet.toLowerCase();
+  return (
+    text.includes("average cost") ||
+    text.includes("typically ranges") ||
+    text.includes("may vary") ||
+    text.includes("estimate") ||
+    text.includes("general information")
+  );
+}
+
+function isHighConfidenceUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+    if (LOW_QUALITY_HOST_PATTERNS.some((pattern) => pattern.test(host))) return false;
+
+    const full = `${host}${parsed.pathname}`.toLowerCase();
+    const hasPriceHint = PRICE_PAGE_HINTS.some((hint) => full.includes(hint));
+    const isMarketplace = MARKETPLACE_DOMAINS.some((d) => host.includes(d));
+    const isClinicLike =
+      host.includes("clinic") ||
+      host.includes("medical") ||
+      host.includes("health") ||
+      host.includes("urgent") ||
+      host.includes("care");
+
+    return hasPriceHint || isMarketplace || isClinicLike;
+  } catch {
+    return false;
+  }
+}
+
+function shouldSkipWeakSnippet(snippet: string): boolean {
+  const text = snippet.toLowerCase();
+  return (
+    text.includes("average cost") ||
+    text.includes("typically ranges") ||
+    text.includes("may vary") ||
+    text.includes("estimate") ||
+    text.includes("general information")
+  );
 }
 
 function isHighConfidenceUrl(url: string): boolean {
@@ -737,6 +971,12 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
 
       debugEntry.provider = providerNames.length > 0 ? providerNames.join(",") : "none";
 
+
+      const providerNames = providerTasks.map((task) => task.name);
+      const results: SearchHit[] = [];
+
+      debugEntry.provider = providerNames.length > 0 ? providerNames.join(",") : "none";
+
       if (providerTasks.length === 0) {
         debugEntry.status = "no_api_key";
         debugEntry.notes = "No search provider configured. For generic providers, set both *_API_KEY and *_SEARCH_URL.";
@@ -752,6 +992,13 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
       }
 
       for (const result of results) {
+        // Hard-filter SKIP_DOMAINS at collection time — never add them to the pool
+        try {
+          const host = new URL(result.url).hostname.replace(/^www\./, "");
+          if (SKIP_DOMAINS.some((d) => host === d || host.endsWith(`.${d}`))) continue;
+        } catch {
+          continue;
+        }
         if (!isHighConfidenceUrl(result.url)) continue;
         if (shouldSkipWeakSnippet(result.snippet)) continue;
         if (!allUrls.has(result.url)) {
@@ -765,12 +1012,45 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
       debugLog.push(debugEntry);
     }
 
+    // ── Domain probing: check known pricing paths on discovered clinic domains ──
+    // For each unique clinic domain found via search, fire concurrent HEAD requests
+    // to known pricing paths. Finds pricing pages that weren't indexed for this
+    // specific query.
+    const probeTargets = new Map<string, string>(); // origin → first URL found
+    for (const hit of urlResults) {
+      try {
+        const parsed = new URL(hit.url);
+        const host = parsed.hostname.replace(/^www\./, "");
+        const origin = `${parsed.protocol}//${parsed.hostname}`;
+        if (!probeTargets.has(host) && scoreUrl(hit.url, hit.title).score >= 20) {
+          probeTargets.set(host, origin);
+        }
+      } catch { /* ignore */ }
+    }
+    for (const [, origin] of [...probeTargets.entries()].slice(0, 5)) {
+      const probed = await probeDomainForPricingPages(origin);
+      for (const probedUrl of probed) {
+        if (!allUrls.has(probedUrl)) {
+          allUrls.add(probedUrl);
+          // Probed pricing-path URLs get an empty snippet — handled by score bypass below
+          urlResults.push({ url: probedUrl, title: `${new URL(probedUrl).hostname} — Pricing`, snippet: "" });
+        }
+      }
+    }
+
+    // ── Score and sort all candidates — highest confidence first ─────────────
+    const scoredCandidates = urlResults
+      .map((hit) => ({ ...hit, _score: scoreUrl(hit.url, hit.title).score }))
+      .filter((hit) => !scoreUrl(hit.url, hit.title).shouldSkip)
+      .sort((a, b) => b._score - a._score)
+      .slice(0, 18);
+
     const { city, state, zip } = parseLocation(params.location);
     const geo = await geocodeLocation(params.location);
     const insertedResults: SearchResult[] = [];
 
-    for (const urlResult of urlResults.slice(0, 20)) {
-      const { url, title, snippet } = urlResult;
+    for (const urlResult of scoredCandidates) {
+      const { url, title, snippet, _score } = urlResult;
 
       try {
         const domain = new URL(url).hostname.replace("www.", "");
@@ -778,6 +1058,22 @@ export async function runSearch(searchId: number, params: SearchParams): Promise
         if (params.directClinicOnly && MARKETPLACE_DOMAINS.some((d) => url.includes(d))) continue;
         if (!params.includeMarketplaces && MARKETPLACE_DOMAINS.some((d) => url.includes(d))) continue;
         if (!params.includePdfs && url.toLowerCase().endsWith(".pdf")) continue;
+
+        // ── Snippet pre-screening: skip fetch if no price evidence ────────────
+        // Exception: URLs with a confirmed pricing path in the URL (_score >= 55)
+        // are always fetched — probed URLs and organically-found pricing pages.
+        const hasPricingPath = PRICE_URL_PATHS.some((p) => url.toLowerCase().includes(p));
+        const isPdfUrl = url.toLowerCase().endsWith(".pdf");
+        if (!hasPricingPath && !isPdfUrl && _score < 55 && !snippetHasPriceSignal(snippet, title)) {
+          debugLog.push({
+            query: url,
+            provider: "pre-screen",
+            urlsSearched: [],
+            status: "skipped_no_evidence",
+            notes: `Score ${_score} — no price signal in snippet`,
+          });
+          continue;
+        }
 
         const pageData = await fetchPage(url);
         const isPdf = pageData?.isPdf || false;
