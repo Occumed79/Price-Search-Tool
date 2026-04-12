@@ -119,10 +119,6 @@ export default function SearchPage() {
     return params.get("debug") === "1" || params.get("debug") === "true";
   });
 
-  // Hero search bar state
-  const [heroQuery, setHeroQuery] = useState("");
-  const [heroLocation, setHeroLocation] = useState("");
-
   const queryClient = useQueryClient();
   const [location] = useLocation();
   const startSearch = useStartSearch();

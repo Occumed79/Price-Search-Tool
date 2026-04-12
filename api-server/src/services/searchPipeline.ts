@@ -128,78 +128,6 @@ const LOW_QUALITY_HOST_PATTERNS = [
 ];
 const PRICE_PAGE_HINTS = ["price", "pricing", "self-pay", "cash", "fee", "fees", "transparency", "cost"];
 
-const SERVICE_PROFILES: Record<string, ServiceProfile> = {
-  "dot physical": {
-    pricingPaths: ["dot", "cdl", "occupational", "employer-services"],
-    priceContextTerms: ["DOT physical exam cost", "CDL exam fee self-pay"],
-    specialtyTerms: ["FMCSA", "CDL", "occupational health"],
-    hasPdfSchedules: false,
-  },
-  "faa medical exam": {
-    pricingPaths: ["aviation", "faa", "flight-physical", "ame"],
-    priceContextTerms: ["aviation medical exam fee", "AME exam cost"],
-    specialtyTerms: ["aviation medical examiner", "AME", "third class medical"],
-    hasPdfSchedules: false,
-  },
-  "mammogram": {
-    pricingPaths: ["imaging", "radiology", "mammography", "womens-health"],
-    priceContextTerms: ["screening mammogram self-pay fee", "mammography cash price"],
-    specialtyTerms: ["diagnostic imaging", "radiology", "breast center"],
-    hasPdfSchedules: true,
-  },
-  "drug screen": {
-    pricingPaths: ["drug-screen", "drug-testing", "occupational", "employer"],
-    priceContextTerms: ["urine drug test self-pay", "5-panel drug screen fee"],
-    specialtyTerms: ["occupational health", "employer services", "pre-employment"],
-    hasPdfSchedules: false,
-  },
-  "blood panel": {
-    pricingPaths: ["lab", "laboratory", "blood-work", "testing"],
-    priceContextTerms: ["blood panel cash price", "lab draw self-pay"],
-    specialtyTerms: ["clinical laboratory", "lab services"],
-    hasPdfSchedules: true,
-  },
-  "tb test": {
-    pricingPaths: ["immunization", "testing", "travel-health"],
-    priceContextTerms: ["PPD test self-pay", "tuberculosis test cash price"],
-    specialtyTerms: ["travel medicine", "employee health"],
-    hasPdfSchedules: false,
-  },
-  "treadmill stress test": {
-    pricingPaths: ["cardiology", "cardiac", "heart"],
-    priceContextTerms: ["stress test self-pay fee", "exercise stress test cash price"],
-    specialtyTerms: ["cardiology", "cardiac imaging"],
-    hasPdfSchedules: false,
-  },
-  "urgent care visit": {
-    pricingPaths: ["pricing", "self-pay", "cash-prices", "fees"],
-    priceContextTerms: ["urgent care visit self-pay", "walk-in clinic cash price"],
-    specialtyTerms: ["urgent care", "walk-in clinic"],
-    hasPdfSchedules: false,
-  },
-  "physical exam": {
-    pricingPaths: ["pricing", "physicals", "preventive", "self-pay"],
-    priceContextTerms: ["physical exam self-pay cost", "annual physical cash price"],
-    specialtyTerms: ["preventive care", "annual wellness"],
-    hasPdfSchedules: false,
-  },
-  "office visit": {
-    pricingPaths: ["pricing", "self-pay", "cash-prices", "fees"],
-    priceContextTerms: ["office visit self-pay rate", "new patient visit cash price"],
-    specialtyTerms: ["primary care", "family medicine"],
-    hasPdfSchedules: false,
-  },
-};
-
-function getServiceProfile(serviceType: string): ServiceProfile {
-  return SERVICE_PROFILES[serviceType.toLowerCase().trim()] ?? {
-    pricingPaths: ["pricing", "fees", "self-pay", "cash-prices"],
-    priceContextTerms: [`"${serviceType}" cash price`, `"${serviceType}" self-pay fee`],
-    specialtyTerms: [],
-    hasPdfSchedules: false,
-  };
-}
-
 // ── Surgical query builder ────────────────────────────────────────────────────
 // Strategy: find pages WHERE prices are posted, not pages ABOUT prices.
 // Operators used:
@@ -833,6 +761,39 @@ function classifySourceType(url: string): "direct_clinic" | "clinic_chain" | "ma
   if (shouldSkip) return "weak_reference";
   if (score >= 40 || PRICE_URL_PATHS.some((p) => url.toLowerCase().includes(p))) return "direct_clinic";
   return "direct_clinic";
+}
+
+function isHighConfidenceUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace("www.", "");
+    if (LOW_QUALITY_HOST_PATTERNS.some((pattern) => pattern.test(host))) return false;
+
+    const full = `${host}${parsed.pathname}`.toLowerCase();
+    const hasPriceHint = PRICE_PAGE_HINTS.some((hint) => full.includes(hint));
+    const isMarketplace = MARKETPLACE_DOMAINS.some((d) => host.includes(d));
+    const isClinicLike =
+      host.includes("clinic") ||
+      host.includes("medical") ||
+      host.includes("health") ||
+      host.includes("urgent") ||
+      host.includes("care");
+
+    return hasPriceHint || isMarketplace || isClinicLike;
+  } catch {
+    return false;
+  }
+}
+
+function shouldSkipWeakSnippet(snippet: string): boolean {
+  const text = snippet.toLowerCase();
+  return (
+    text.includes("average cost") ||
+    text.includes("typically ranges") ||
+    text.includes("may vary") ||
+    text.includes("estimate") ||
+    text.includes("general information")
+  );
 }
 
 function isHighConfidenceUrl(url: string): boolean {

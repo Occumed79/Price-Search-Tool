@@ -3,7 +3,7 @@ services:
     name: price-search-api
     runtime: node
     rootDir: .
-    buildCommand: npm install -g pnpm && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/db push && NODE_ENV=production pnpm --filter @workspace/clinic-search build && pnpm --filter @workspace/api-server build
+    buildCommand: bash ./scripts/render-build.sh
     startCommand: node --enable-source-maps ./api-server/dist/index.mjs
     envVars:
       - key: NODE_ENV
