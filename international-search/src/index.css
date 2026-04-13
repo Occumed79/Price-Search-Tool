@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: white;
+}
+
+/* ── Portal 5 deep-space background ── */
+.portal5-bg {
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -5%, rgba(6, 182, 212, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 5% 50%, rgba(37, 99, 235, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 95% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 40% at 50% 110%, rgba(79, 70, 229, 0.06) 0%, transparent 60%),
+    hsl(222, 47%, 5%);
+}
+
+/* ── Glass nav ── */
+.portal5-nav {
+  background: rgba(5, 9, 20, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* ── Cards / search box ── */
+.portal5-card {
+  background: rgba(255, 255, 255, 0.027);
+}
+
+/* ── Inputs ── */
+.portal5-input {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.portal5-input:focus {
+  outline: none;
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.1);
+}
+.portal5-input::placeholder {
+  color: rgba(255, 255, 255, 0.22);
+}
+
+/* ── Select reset ── */
+select.portal5-input {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+select.portal5-input option {
+  background: hsl(222, 47%, 8%);
+  color: white;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }

@@ -1,4 +1,21 @@
 services:
+  # ── Portal 5 — International Search (static frontend) ──────────────────────
+  - type: static
+    name: international-search
+    rootDir: .
+    buildCommand: npm install -g pnpm && pnpm install --no-frozen-lockfile && NODE_ENV=production pnpm --filter @workspace/international-search build
+    staticPublishPath: ./international-search/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false   # Set to your price-search-api Render URL, e.g. https://price-search-api.onrender.com
+      - key: VITE_HUB_URL
+        sync: false   # Set to your main clinic-search app URL
+
+  # ── Main API + clinic-search frontend ──────────────────────────────────────
   - type: web
     name: price-search-api
     runtime: node

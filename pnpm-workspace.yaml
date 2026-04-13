@@ -38,6 +38,7 @@ packages:
   - artifacts/*
   - api-server
   - clinic-search
+  - international-search
   - lib/*
   - lib/integrations/*
   - scripts
