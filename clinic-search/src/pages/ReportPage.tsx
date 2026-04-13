@@ -234,6 +234,7 @@ export default function ReportPage() {
   const [expandSources,setExpandSources]=useState(false);
   const [showAllSvc,setShowAllSvc]=useState(false);
   const [intel,setIntel]=useState<IntelligenceData|null>(null);
+  const [scoreData,setScoreData]=useState<Record<string,unknown>|null>(null);
   const [loading,setLoading]=useState(false);
   const [fetchErr,setFetchErr]=useState<string|null>(null);
   const [reportReady,setReportReady]=useState(false);
@@ -261,7 +262,46 @@ export default function ReportPage() {
     finally{setLoading(false);}
   },[req.targetCountry,req.targetState,req.targetCity,req.providerType]);
 
-  const generate=async()=>{if(!intel)await fetchIntel();setReportReady(true);setActiveTab("report");};
+  const fetchScore=useCallback(async(intelData: IntelligenceData)=>{
+    try{
+      const base=import.meta.env.VITE_API_URL||"";
+      const r=await fetch(`${base}/api/report/score`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          intel: intelData,
+          providerType: req.providerType,
+          country: req.targetCountry,
+          state: req.targetState,
+          city: req.targetCity,
+          radius: parseInt(req.searchRadiusMiles)||25,
+          services: req.occHealthServices,
+          isInternational: req.isInternational,
+        }),
+        signal:AbortSignal.timeout(30000),
+      });
+      if(r.ok)setScoreData(await r.json());
+    }catch(e){console.warn("Score fetch failed",(e as Error).message);}
+  },[req.providerType,req.targetCountry,req.targetState,req.targetCity,req.searchRadiusMiles,req.occHealthServices,req.isInternational]);
+
+  const generate=async()=>{
+    let intelResult=intel;
+    if(!intelResult){
+      setLoading(true);setFetchErr(null);
+      try{
+        const base=import.meta.env.VITE_API_URL||"";
+        const p=new URLSearchParams({country:req.targetCountry,state:req.targetState,city:req.targetCity,providerType:req.providerType});
+        const r=await fetch(`${base}/api/report/intelligence?${p}`,{signal:AbortSignal.timeout(60000)});
+        if(!r.ok)throw new Error(`Server error: ${r.status}`);
+        intelResult=await r.json() as IntelligenceData;
+        setIntel(intelResult);
+      }catch(e){setFetchErr((e as Error).message);}
+      finally{setLoading(false);}
+    }
+    if(intelResult) await fetchScore(intelResult);
+    setReportReady(true);
+    setActiveTab("report");
+  };
 
   const wb=intel?.worldBankData as Record<string,number|null>|undefined;
   const npi=intel?.npiData as Record<string,unknown>|undefined;
@@ -495,8 +535,54 @@ export default function ReportPage() {
 
                 {/* Executive Summary */}
                 <GC className="p-7">
+                  {/* Live score banner — shown when /api/report/score returned data */}
+                  {scoreData&&(
+                    <div className="mb-6 rounded-2xl border border-sky-500/20 bg-sky-500/5 p-5 relative overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/50 to-transparent"/>
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center shrink-0">
+                          <Database className="w-4 h-4 text-sky-400"/>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-sky-200 tracking-tight">Live Intelligence Assessment</h3>
+                          <p className="text-xs text-white/40 mt-0.5">{(scoreData.scores as Record<string,Record<string,string>>)?.providerScarcity?.source}</p>
+                        </div>
+                        <div className="ml-auto text-right">
+                          <div className="text-2xl font-bold" style={{color: scoreData.difficultyColor as string}}>{scoreData.timeline as string}</div>
+                          <div className="text-[10px] text-white/40 mt-0.5">estimated search timeline</div>
+                        </div>
+                      </div>
+                      {/* Key findings */}
+                      {(scoreData.keyFindings as string[])?.length>0&&(
+                        <div className="mb-4">
+                          <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-2">Key Findings</p>
+                          <div className="space-y-1.5">
+                            {(scoreData.keyFindings as string[]).map((f,i)=>(
+                              <div key={i} className="flex items-start gap-2 text-xs text-white/65">
+                                <span className="text-sky-400 mt-0.5 shrink-0">▸</span>{f}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {/* Recommendations */}
+                      {(scoreData.recommendations as string[])?.length>0&&(
+                        <div>
+                          <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-2">Recommended Actions</p>
+                          <div className="space-y-1.5">
+                            {(scoreData.recommendations as string[]).map((r,i)=>(
+                              <div key={i} className="flex items-start gap-2 text-xs text-orange-300/80">
+                                <span className="text-orange-400 mt-0.5 shrink-0">→</span>{r}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-start gap-8 flex-wrap">
-                    <ScoreGauge score={scores.overallDifficulty} color={scores.difficultyColor} label={`${scores.difficultyLabel} Difficulty`}/>
+                    <div className="score-gauge-glow"><ScoreGauge score={scoreData?(scoreData.overallDifficulty as number):scores.overallDifficulty} color={scoreData?(scoreData.difficultyColor as string):scores.difficultyColor} label={`${scoreData?(scoreData.difficultyLabel as string):scores.difficultyLabel} Difficulty`}/></div>
                     <div className="flex-1 min-w-[280px]">
                       <div className="flex items-center gap-2 mb-3 flex-wrap">
                         <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full border ${PC[req.priority]}`}>{req.priority}</span>
@@ -687,15 +773,20 @@ export default function ReportPage() {
 
                 {/* Difficulty breakdown */}
                 <GC className="p-6">
-                  <SH icon={BarChart3} title="Difficulty Factor Analysis" subtitle={intel?"Calibrated with live external data":"Static reference — fetch live data to enrich"}/>
+                  <SH icon={BarChart3} title="Difficulty Factor Analysis" subtitle={scoreData?"✅ Calibrated with live NPI, World Bank, OSM & Census data":intel?"Calibrated with live external data":"Static reference — fetch live data to enrich"}/>
                   <div className="space-y-3">
-                    {[
+                    {(scoreData?[
+                      {label:"Provider Type Scarcity",val:(scoreData.scores as Record<string,Record<string,number>>).providerScarcity.score,note:(scoreData.scores as Record<string,Record<string,string>>).providerScarcity.source,weight:"38%",src:"CMS NPI Registry (live)"},
+                      {label:"Geographic Access",val:(scoreData.scores as Record<string,Record<string,number>>).geographicAccess.score,note:(scoreData.scores as Record<string,Record<string,string>>).geographicAccess.source,weight:"22%",src:"OpenStreetMap (live)"},
+                      {label:"Health System Quality",val:(scoreData.scores as Record<string,Record<string,number>>).healthSystem.score,note:(scoreData.scores as Record<string,Record<string,string>>).healthSystem.source,weight:"22%",src:"World Bank + WHO (live)"},
+                      {label:"Pricing Transparency",val:(scoreData.scores as Record<string,Record<string,number>>).pricingTransparency.score,note:(scoreData.scores as Record<string,Record<string,string>>).pricingTransparency.source,weight:"18%",src:"Occu-Med reference"},
+                    ]:[
                       {label:"Provider Type Scarcity",val:scores.provDiff,note:`${req.providerType} — ${PROVIDER_DIFFICULTY[req.providerType]?.label??'Moderate'} national scarcity${npi?` · NPI: ${(npi.resultCount as number).toLocaleString()} in ${req.targetState}`:" (static ref)"}`,weight:"38%",src:npi?"CMS NPI Registry (live)":"Static reference"},
                       {label:"Country / Market Access",val:scores.countryDiff,note:`${req.targetCountry}${wb?.physiciansper1k?` · ${wb.physiciansper1k.toFixed(2)} physicians/1k`:""}${wb?.healthExpPctGDP?` · ${wb.healthExpPctGDP.toFixed(1)}% GDP on health`:""}`,weight:"30%",src:wb?"World Bank + WHO (live)":"Static reference"},
                       {label:"Regional Provider Density",val:scores.desertScore,note:osm?`${osm.totalMedicalFacilities} facilities within 50km (OpenStreetMap)`:"Regional infrastructure estimate",weight:"22%",src:osm?"OpenStreetMap (live)":"Static reference"},
                       {label:"Failed Contact Penalty",val:scores.failedContacts*6,note:`${scores.failedContacts} no-response/declined contacts`,weight:"+additive",src:"Internal log"},
                       {label:"Prior Search Adjustment",val:scores.priorSuccess?-12:0,note:scores.priorSuccess?"Prior success reduces cold-start effort":"No prior successful search — starting cold",weight:"+/-",src:"Internal log"},
-                    ].map(f=>(
+                    ]).map(f=>(
                       <div key={f.label} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
                         <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                           <div className="flex items-center gap-2"><span className="text-sm font-semibold text-white/80">{f.label}</span><span className="text-[10px] text-white/25 bg-white/[0.04] px-1.5 py-0.5 rounded-full">weight {f.weight}</span><span className="text-[9px] text-sky-400/50 bg-sky-500/5 border border-sky-500/10 px-1.5 py-0.5 rounded-full">{f.src}</span></div>
