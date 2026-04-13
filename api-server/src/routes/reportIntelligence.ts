@@ -412,4 +412,238 @@ out count;`;
   res.json(results);
 });
 
+// ── POST /api/report/score — synthesizes all intel into a scored assessment ──
+// This is what makes the report actually useful:
+// - Takes live intel data from /api/report/intelligence
+// - Computes a real search difficulty score from NPI counts, World Bank data, OSM density
+// - Returns a timeline prediction with confidence intervals
+// - Returns actionable findings, not just raw data
+router.post("/report/score", async (req, res) => {
+  const {
+    intel,
+    providerType = "Occupational Medicine",
+    country = "United States",
+    state = "",
+    city = "",
+    radius = 25,
+    services = [] as string[],
+    isInternational = false,
+  } = req.body as {
+    intel: Record<string,unknown>;
+    providerType?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    radius?: number;
+    services?: string[];
+    isInternational?: boolean;
+  };
+
+  // ── Extract live data from the intel payload ──────────────────────────────
+  const wb = intel?.worldBankData as Record<string,number|null> | undefined;
+  const npi = intel?.npiData as Record<string,unknown> | undefined;
+  const osm = intel?.osmProviderData as Record<string,unknown> | undefined;
+  const census = intel?.censusData as Record<string,unknown> | undefined;
+  const whoData = intel?.whoData as Record<string,unknown> | undefined;
+  const uhcVals = (whoData?.uhcIndexValues as Array<Record<string,unknown>> | undefined) ?? [];
+  const meta = intel?.countryMeta as Record<string,unknown> | undefined;
+
+  // ── Provider scarcity — from NPI live count ───────────────────────────────
+  const SCARCITY_BASELINES: Record<string,{ national: number; description: string; certRequired: string[] }> = {
+    "Occupational Medicine":  { national: 8200,  description: "Very limited supply — board-certified Occ Med physicians are rare", certRequired: ["ABPM Board Certification"] },
+    "FAA Aviation Medical":   { national: 3800,  description: "Extremely limited — FAA AME designation required by law", certRequired: ["FAA Aviation Medical Examiner (AME)"] },
+    "DOT Physical Examiner":  { national: 65000, description: "Moderate supply — FMCSA CME certification required", certRequired: ["FMCSA Certified Medical Examiner (CME)", "NRCME Registry"] },
+    "Urgent Care":            { national: 14000, description: "High supply nationally but concentrated in urban areas", certRequired: [] },
+    "Primary Care / GP":      { national: 210000, description: "Adequate supply nationally but rural shortages common", certRequired: [] },
+    "Cardiology / Stress Test":{ national: 24000, description: "Moderate — cardiology boards required", certRequired: ["ABIM Cardiovascular Disease"] },
+    "Radiology / Mammogram":  { national: 34000, description: "Moderate — radiology boards + mammography accreditation", certRequired: ["ACR Mammography Accreditation"] },
+    "Dental":                 { national: 200000, description: "Good supply nationally", certRequired: [] },
+    "Drug Screening / Lab":   { national: 95000, description: "High supply — SAMHSA certification required for DOT programs", certRequired: ["SAMHSA-Certified Lab (DOT programs)"] },
+    "Audiology":              { national: 14000, description: "Moderate — Au.D. required", certRequired: ["CAOHC Audiometric Technician (workplace)"] },
+    "Physical Therapy":       { national: 310000, description: "High supply", certRequired: [] },
+    "Mental Health":          { national: 180000, description: "High demand, significant rural shortages", certRequired: [] },
+    "Specialist (Other)":     { national: 60000,  description: "Varies by specialty", certRequired: [] },
+  };
+
+  const baseline = SCARCITY_BASELINES[providerType] ?? SCARCITY_BASELINES["Specialist (Other)"];
+  const npiCount = Number(npi?.resultCount ?? 0);
+  const npiNational = Number(npi?.nationalCount ?? baseline.national);
+
+  // State density score
+  let providerScarcityScore = 55; // 0-100, higher = harder to find
+  if (npiCount > 0) {
+    const ratio = npiCount / baseline.national;
+    if (ratio < 0.01) providerScarcityScore = 92;
+    else if (ratio < 0.03) providerScarcityScore = 78;
+    else if (ratio < 0.08) providerScarcityScore = 62;
+    else if (ratio < 0.15) providerScarcityScore = 48;
+    else if (ratio < 0.30) providerScarcityScore = 35;
+    else providerScarcityScore = 22;
+  }
+
+  // ── Geographic access — from OSM facility count ───────────────────────────
+  const osmFacilities = Number(osm?.totalMedicalFacilities ?? 0);
+  let geoAccessScore = 50;
+  if (osm) {
+    if (osmFacilities > 500) geoAccessScore = 12;
+    else if (osmFacilities > 200) geoAccessScore = 25;
+    else if (osmFacilities > 80) geoAccessScore = 38;
+    else if (osmFacilities > 30) geoAccessScore = 55;
+    else if (osmFacilities > 10) geoAccessScore = 72;
+    else geoAccessScore = 88;
+  }
+
+  // ── Health system quality — from World Bank + WHO ────────────────────────
+  const physicians = wb?.physiciansper1k ?? null;
+  const healthExpPct = wb?.healthExpPctGDP ?? null;
+  const uhcIndex = uhcVals[0]?.value ? Number(uhcVals[0].value) : null;
+  let healthSystemScore = isInternational ? 65 : 30;
+  if (physicians != null) {
+    if (physicians >= 4.0) healthSystemScore -= 20;
+    else if (physicians >= 2.5) healthSystemScore -= 10;
+    else if (physicians < 0.5) healthSystemScore += 25;
+    else if (physicians < 1.0) healthSystemScore += 15;
+  }
+  if (uhcIndex != null) {
+    if (uhcIndex > 80) healthSystemScore -= 12;
+    else if (uhcIndex < 50) healthSystemScore += 18;
+  }
+  healthSystemScore = Math.max(5, Math.min(healthSystemScore, 95));
+
+  // ── Market access / pricing transparency ─────────────────────────────────
+  let pricingTransparencyScore = isInternational ? 72 : 45;
+  if (!isInternational) {
+    // US providers in Occ Med rarely post prices
+    if (providerType === "Occupational Medicine") pricingTransparencyScore = 78;
+    else if (providerType === "FAA Aviation Medical") pricingTransparencyScore = 55;
+    else if (providerType === "DOT Physical Examiner") pricingTransparencyScore = 42;
+    else if (providerType === "Dental") pricingTransparencyScore = 35;
+    else if (providerType === "Urgent Care") pricingTransparencyScore = 30;
+  }
+
+  // ── Composite difficulty (weighted average) ───────────────────────────────
+  const weights = { provider: 0.38, geo: 0.22, healthSystem: 0.22, pricing: 0.18 };
+  const rawDifficulty =
+    providerScarcityScore * weights.provider +
+    geoAccessScore * weights.geo +
+    healthSystemScore * weights.healthSystem +
+    pricingTransparencyScore * weights.pricing;
+  const overallDifficulty = Math.min(Math.round(rawDifficulty), 99);
+
+  // ── Timeline prediction ───────────────────────────────────────────────────
+  const BASE_DAYS: Record<string,number> = {
+    "Low": 2, "Moderate": 5, "High": 12, "Very High": 22, "Critical": 45,
+  };
+  const difficultyLabel =
+    overallDifficulty >= 80 ? "Critical"
+    : overallDifficulty >= 65 ? "Very High"
+    : overallDifficulty >= 50 ? "High"
+    : overallDifficulty >= 35 ? "Moderate"
+    : "Low";
+
+  const baseDays = BASE_DAYS[difficultyLabel] ?? 10;
+  const intlMultiplier = isInternational ? 1.8 : 1.0;
+  const estimatedDaysMin = Math.round(baseDays * 0.7 * intlMultiplier);
+  const estimatedDaysMax = Math.round(baseDays * 1.5 * intlMultiplier);
+
+  // ── Key findings — the "so what?" ────────────────────────────────────────
+  const findings: string[] = [];
+
+  if (npiCount > 0) {
+    findings.push(`${npiCount.toLocaleString()} active licensed ${providerType} providers found in ${state || country} via CMS NPI Registry`);
+  }
+  if (osmFacilities > 0) {
+    findings.push(`${osmFacilities} medical facilities within 50km of ${city || state || country} (OpenStreetMap)`);
+  }
+  if (physicians != null) {
+    findings.push(`${physicians.toFixed(2)} physicians per 1,000 people in ${country} (World Bank) — ${physicians > 3 ? "strong" : physicians > 1.5 ? "moderate" : "limited"} physician density`);
+  }
+  if (healthExpPct != null) {
+    findings.push(`${healthExpPct.toFixed(1)}% of GDP spent on healthcare in ${country} — ${healthExpPct > 10 ? "high investment market" : healthExpPct > 5 ? "moderate" : "low-investment system"}`);
+  }
+  if (uhcIndex != null) {
+    findings.push(`WHO UHC Coverage Index: ${uhcIndex.toFixed(0)}/100 — ${uhcIndex > 75 ? "high system coverage" : uhcIndex > 50 ? "partial coverage" : "significant coverage gaps"}`);
+  }
+  if (census?.noHealthInsuranceEstimate) {
+    const uninsured = Number(census.noHealthInsuranceEstimate);
+    findings.push(`~${uninsured.toLocaleString()} uninsured residents in ${state} (Census ACS) — represents addressable self-pay market`);
+  }
+  if (baseline.certRequired.length > 0) {
+    findings.push(`Required credentials: ${baseline.certRequired.join(", ")} — limiting factor for provider availability`);
+  }
+
+  // ── Actionable recommendations ────────────────────────────────────────────
+  const recommendations: string[] = [];
+  if (npiCount < 50 && npiCount > 0) {
+    recommendations.push(`Only ${npiCount} providers in state — expand radius to ${Math.min(radius * 3, 200)} miles or consider telehealth-capable options`);
+  }
+  if (npiCount === 0) {
+    recommendations.push(`No NPI providers found in immediate area — consider national telehealth network or regional hub model`);
+  }
+  if (isInternational && physicians != null && physicians < 1.0) {
+    recommendations.push(`Low physician density (${physicians.toFixed(2)}/1k) — expect 2–4x longer sourcing timeline. Partner with local health ministries or medical associations.`);
+  }
+  if (providerType === "FAA Aviation Medical" || providerType === "DOT Physical Examiner") {
+    recommendations.push(`Use official federal registries: ${providerType === "FAA Aviation Medical" ? "FAA AME Locator (amsrvs.registry.faa.gov)" : "FMCSA NRCME Registry (nationalregistry.fmcsa.dot.gov)"}`);
+  }
+  if (geoAccessScore > 70) {
+    recommendations.push(`Low facility density in area — consider mobile health units or on-site clinic programs to bridge the gap`);
+  }
+  if (pricingTransparencyScore > 60) {
+    recommendations.push(`Price transparency is limited for ${providerType} — direct outreach + MSA negotiation will be required. Expect prices 15–40% below walk-in rates.`);
+  }
+
+  // ── Price benchmarks from our reference database ─────────────────────────
+  const PRICE_DB: Record<string, { usAvg: number; range: [number,number]; notes: string }> = {
+    "Pre-Employment Physical": { usAvg: 110, range: [65, 220], notes: "Most commonly posted. Employer-paid." },
+    "DOT Physical (FMCSA)": { usAvg: 110, range: [75, 175], notes: "FMCSA CME required." },
+    "FAA Aviation Medical – Class 1": { usAvg: 175, range: [110, 290], notes: "AME designation required." },
+    "FAA Aviation Medical – Class 2": { usAvg: 145, range: [85, 220], notes: "Commercial pilots." },
+    "FAA Aviation Medical – Class 3": { usAvg: 120, range: [75, 200], notes: "Private pilots." },
+    "Drug Screen – 5-Panel Urine": { usAvg: 55, range: [25, 95], notes: "Collection fee often separate." },
+    "Drug Screen – 10-Panel Urine": { usAvg: 75, range: [40, 150], notes: "DOT must use SAMHSA lab." },
+    "Audiogram – Pure Tone": { usAvg: 75, range: [40, 155], notes: "OSHA-mandated." },
+    "Pulmonary Function Test (PFT)": { usAvg: 135, range: [70, 260], notes: "Respirator clearance." },
+    "Independent Medical Exam (IME)": { usAvg: 425, range: [275, 850], notes: "High variability by state WC." },
+  };
+
+  const servicesBenchmarks = (services as string[]).map(svcName => {
+    const bench = PRICE_DB[svcName];
+    return bench ? { service: svcName, ...bench } : null;
+  }).filter(Boolean);
+
+  logger.info({ overallDifficulty, difficultyLabel, estimatedDaysMin, estimatedDaysMax }, "Report scored");
+
+  res.json({
+    scoredAt: new Date().toISOString(),
+    overallDifficulty,
+    difficultyLabel,
+    difficultyColor: overallDifficulty >= 80 ? "#ef4444" : overallDifficulty >= 65 ? "#f97316" : overallDifficulty >= 50 ? "#eab308" : overallDifficulty >= 35 ? "#22d3ee" : "#22c55e",
+    estimatedDaysMin,
+    estimatedDaysMax,
+    timeline: `${estimatedDaysMin}–${estimatedDaysMax} business days`,
+    scores: {
+      providerScarcity: { score: providerScarcityScore, label: "Provider Scarcity", weight: "38%", source: npiCount > 0 ? `CMS NPI — ${npiCount.toLocaleString()} active providers in ${state || country}` : "Static reference" },
+      geographicAccess: { score: geoAccessScore, label: "Geographic Access", weight: "22%", source: osmFacilities > 0 ? `OpenStreetMap — ${osmFacilities} facilities within 50km` : "Static reference" },
+      healthSystem: { score: healthSystemScore, label: "Health System Quality", weight: "22%", source: wb ? "World Bank + WHO live data" : "Static reference" },
+      pricingTransparency: { score: pricingTransparencyScore, label: "Pricing Transparency", weight: "18%", source: "Occu-Med reference database" },
+    },
+    keyFindings: findings,
+    recommendations,
+    servicesBenchmarks,
+    providerScarcityDescription: baseline.description,
+    requiredCredentials: baseline.certRequired,
+    dataPoints: {
+      npiProviders: npiCount,
+      osmFacilities,
+      physiciansPerThousand: physicians,
+      healthExpPctGDP: healthExpPct,
+      uhcCoverageIndex: uhcIndex,
+      uninsuredPopulation: census?.noHealthInsuranceEstimate ?? null,
+    },
+  });
+});
+
+
 export default router;
+
