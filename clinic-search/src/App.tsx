@@ -9,6 +9,7 @@ import SavedPage from "@/pages/SavedPage";
 import SearchesPage from "@/pages/SearchesPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NetworkMapPage from "@/pages/NetworkMapPage";
+import ReportPage from "@/pages/ReportPage";
 import HubNavBar from "@/components/HubNavBar";
 import NavBar from "@/components/NavBar";
 import { useLocation } from "wouter";
@@ -40,6 +41,7 @@ function Layout() {
           <Route path="/searches" component={SearchesPage} />
           <Route path="/settings" component={SettingsPage} />
           <Route path="/network-map" component={NetworkMapPage} />
+          <Route path="/report" component={ReportPage} />
           <Route component={NotFound} />
         </Switch>
       </main>
