@@ -178,22 +178,22 @@ function computeScores(req:ReportRequest, intel:IntelligenceData|null) {
 function uid(){return Math.random().toString(36).slice(2,9);}
 
 function GC({children,className=""}:{children:React.ReactNode;className?:string}){
-  return <div className={`rounded-2xl border border-white/[0.09] bg-white/[0.04] backdrop-blur-xl shadow-[0_4px_32px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)] ${className}`}>{children}</div>;
+  return <div className={`rounded-2xl border border-[rgba(99,179,237,0.1)] bg-[rgba(10,18,36,0.65)] backdrop-blur-2xl shadow-[0_4px_32px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.06),0_0_1px_rgba(99,179,237,0.08)] intel-card-hover transition-all duration-300 ${className}`}>{children}</div>;
 }
 function SH({icon:Icon,title,subtitle}:{icon:React.ElementType;title:string;subtitle?:string}){
   return <div className="flex items-start gap-3 mb-5"><div className="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center shrink-0 mt-0.5"><Icon className="w-4 h-4 text-sky-400"/></div><div><h3 className="text-sm font-semibold text-white/90 tracking-tight">{title}</h3>{subtitle&&<p className="text-xs text-white/40 mt-0.5">{subtitle}</p>}</div></div>;
 }
 function Field({label,children}:{label:string;children:React.ReactNode}){
-  return <div className="flex flex-col gap-1.5"><label className="text-[11px] font-semibold text-white/45 uppercase tracking-widest">{label}</label>{children}</div>;
+  return <div className="flex flex-col gap-1.5"><label className="intel-label">{label}</label>{children}</div>;
 }
 function Inp({value,onChange,placeholder,type="text"}:{value:string;onChange:(v:string)=>void;placeholder?:string;type?:string}){
-  return <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="w-full bg-white/[0.05] border border-white/[0.10] rounded-xl px-3 py-2 text-sm text-white/90 placeholder-white/20 focus:outline-none focus:border-sky-500/50 transition-all"/>;
+  return <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="intel-input"/>;
 }
 function Sel({value,onChange,options}:{value:string;onChange:(v:string)=>void;options:{value:string;label:string}[]}){
-  return <select value={value} onChange={e=>onChange(e.target.value)} className="w-full bg-[#0d1a35] border border-white/[0.10] rounded-xl px-3 py-2 text-sm text-white/90 focus:outline-none focus:border-sky-500/50 transition-all appearance-none cursor-pointer">{options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>;
+  return <select value={value} onChange={e=>onChange(e.target.value)} className="intel-select">{options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>;
 }
 function TA({value,onChange,placeholder,rows=3}:{value:string;onChange:(v:string)=>void;placeholder?:string;rows?:number}){
-  return <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows} className="w-full bg-white/[0.05] border border-white/[0.10] rounded-xl px-3 py-2 text-sm text-white/90 placeholder-white/20 focus:outline-none focus:border-sky-500/50 transition-all resize-none"/>;
+  return <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows} className="intel-input resize-none"/>;
 }
 function Stat({label,value,sub,color="text-white/90"}:{label:string;value:string|number|null;sub?:string;color?:string}){
   return <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 flex flex-col gap-1"><p className="text-[10px] font-bold text-white/35 uppercase tracking-widest">{label}</p><p className={`text-xl font-bold leading-tight ${color}`}>{value??'—'}</p>{sub&&<p className="text-[10px] text-white/30">{sub}</p>}</div>;
@@ -290,8 +290,12 @@ export default function ReportPage() {
             {intel&&<div className="flex items-center gap-1 text-[10px] text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full"><Wifi className="w-2.5 h-2.5"/>{intel.sources.filter(s=>s.status.startsWith("✅")).length}/{intel.sources.length} live</div>}
             <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full border ${PC[req.priority]}`}>{req.priority}</span>
             <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full border ${SC[req.searchStatus]}`}>{req.searchStatus.replace("_"," ")}</span>
-            <button onClick={generate} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/20 border border-sky-500/30 text-sky-300 text-xs font-semibold hover:bg-sky-500/30 transition-all disabled:opacity-50">
-              {loading?<><Loader2 className="w-3.5 h-3.5 animate-spin"/>Fetching…</>:<><RefreshCw className="w-3.5 h-3.5"/>Generate Report</>}
+            <button onClick={generate} disabled={loading} className="generate-btn flex items-center gap-2">
+              {loading
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin text-sky-300"/>
+                    <span className="text-sky-200">Fetching Intel…</span></>
+                : <><Zap className="w-3.5 h-3.5"/>
+                    <span>Generate Report</span></>}
             </button>
           </div>
         </div>
@@ -772,3 +776,4 @@ export default function ReportPage() {
     </div>
   );
 }
+
