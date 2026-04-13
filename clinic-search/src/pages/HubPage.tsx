@@ -39,8 +39,8 @@ const portals = [
     id: "report-generator",
     label: "Report Generator",
     description: "Generate utilization, cost trend, and network performance reports on demand.",
-    href: "#",
-    active: false,
+    href: "/report",
+    active: true,
   },
   {
     id: "international-search",
