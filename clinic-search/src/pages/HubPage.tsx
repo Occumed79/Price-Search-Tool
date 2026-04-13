@@ -117,7 +117,7 @@ export default function HubPage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.55, delay: 0.1 + i * 0.08, ease: [0.22,1,0.36,1] }}
             onClick={() => portal.active && navigate(portal.href)}
-            className={`hub-card group relative rounded-2xl flex flex-col items-center text-center gap-4 p-7
+            className={`hub-card group relative rounded-2xl flex flex-col items-center text-center gap-5 p-8
               transition-all duration-300
               ${portal.active
                 ? "cursor-pointer hub-card-active"
@@ -128,7 +128,7 @@ export default function HubPage() {
               <img
                 src={ICONS[portal.id]}
                 alt={portal.label}
-                className={`w-24 h-24 object-contain transition-transform duration-300 drop-shadow-2xl
+                className={`w-44 h-44 object-contain transition-transform duration-300 drop-shadow-2xl
                   ${portal.active ? "group-hover:scale-110" : "grayscale opacity-50"}`}
               />
               {/* Icon glow bloom */}
