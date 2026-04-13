@@ -2,8 +2,6 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-const LOGO_URL = "https://media.base44.com/images/public/69db321c6efb66daf94886ba/ad765f27e_omLogo_header.png";
-
 const ICONS: Record<string, string> = {
   "network-search":    "https://media.base44.com/images/public/69db321c6efb66daf94886ba/76eaef212_27eaa482-1634-442a-9c4b-71dd8b7f562d.png",
   "network-map":       "https://media.base44.com/images/public/69db321c6efb66daf94886ba/8cf8e806c_b30f67cd-6434-401b-b1f4-fc3b5a5845ab.png",
@@ -13,8 +11,6 @@ const ICONS: Record<string, string> = {
   "pricing-transparency":"https://media.base44.com/images/public/69db321c6efb66daf94886ba/36be68237_ChatGPTImageApr12202607_42_15PM.png",
 };
 
-// ── International Search Render URL ──────────────────────────────────────────
-// Once deployed, update INTL_URL to the actual Render service URL
 const INTL_URL = "https://international-search.onrender.com";
 
 const portals = [
@@ -92,16 +88,13 @@ export default function HubPage() {
         <div className="absolute inset-0 opacity-[0.025]" style={{backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`}} />
       </div>
 
-      {/* ── Header ── */}
+      {/* ── Header — text only, no logo box ── */}
       <motion.div
         initial={{ opacity: 0, y: -24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.22,1,0.36,1] }}
-        className="flex flex-col items-center gap-6 mb-16 relative z-10"
+        className="flex flex-col items-center gap-3 mb-16 relative z-10"
       >
-        <div className="hub-logo-wrap px-6 py-4 rounded-2xl">
-          <img src={LOGO_URL} alt="Occu-Med" className="h-14 w-auto object-contain drop-shadow-2xl" />
-        </div>
         <div className="text-center flex flex-col items-center gap-2">
           <h1 className="hub-title text-6xl font-bold tracking-tight leading-none">Occu-Med</h1>
           <p className="hub-subtitle text-xl font-light tracking-[0.22em] uppercase">Network Search Hub</p>
@@ -124,12 +117,12 @@ export default function HubPage() {
                 ? "cursor-pointer hub-card-active"
                 : "cursor-not-allowed hub-card-inactive"}`}
           >
-            {/* Icon */}
+            {/* Icon — much larger */}
             <div className="relative hub-icon-wrap">
               <img
                 src={ICONS[portal.id]}
                 alt={portal.label}
-                className={`w-44 h-44 object-contain transition-transform duration-300 drop-shadow-2xl
+                className={`w-64 h-64 object-contain transition-transform duration-300 drop-shadow-2xl
                   ${portal.active ? "group-hover:scale-110" : "grayscale opacity-50"}`}
               />
               {portal.active && (
