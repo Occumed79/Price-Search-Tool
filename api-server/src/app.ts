@@ -53,6 +53,14 @@ app.get("/{*path}", (req: Request, res: Response) => {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   logger.error({ err }, "Unhandled server error");
+  // Guard against the case where headers were already sent (e.g. an error
+  // thrown mid-stream inside res.json()).  Calling res.json() a second time
+  // would throw again, causing Express to fall back to its built-in HTML
+  // error page — the exact symptom seen in the international search portal.
+  if (res.headersSent) {
+    res.end();
+    return;
+  }
   res.status(500).json({ error: "Internal server error" });
 });
 

@@ -117,6 +117,11 @@ async function apiStartSearch(params: {
   serviceType: string;
   location: string;
 }): Promise<{ id: number }> {
+  if (!API_BASE) {
+    throw new Error(
+      "API URL not configured. Set VITE_API_URL in the Render dashboard and redeploy.",
+    );
+  }
   const resp = await fetch(`${API_BASE}/api/search`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -134,8 +139,15 @@ async function apiStartSearch(params: {
     }),
   });
   if (!resp.ok) {
-    const msg = await resp.text().catch(() => resp.statusText);
-    throw new Error(msg || `HTTP ${resp.status}`);
+    // Avoid surfacing raw HTML error pages (e.g. from the Express default
+    // error handler or a proxy).  Try JSON first; fall back to a short message.
+    const text = await resp.text().catch(() => "");
+    let message = `Search failed (HTTP ${resp.status})`;
+    if (text && !text.trimStart().startsWith("<")) {
+      // Only use the body if it is not HTML
+      message = text;
+    }
+    throw new Error(message);
   }
   return resp.json() as Promise<{ id: number }>;
 }
