@@ -361,7 +361,15 @@ export default function App() {
   const searchDone = searchData?.status === "complete" || searchData?.status === "failed";
 
   return (
-    <div className="portal5-bg min-h-screen text-white flex flex-col">
+    <div className="portal5-bg min-h-screen text-white flex flex-col relative">
+      {/* ── Animated glowing orbs ── */}
+      <div className="p5-orb-layer">
+        <div className="p5-orb-a" />
+        <div className="p5-orb-b" />
+        <div className="p5-orb-c" />
+        <div className="p5-orb-d" />
+      </div>
+
       {/* ── NavBar ── */}
       <header className="portal5-nav border-b border-white/[0.07] sticky top-0 z-50">
         <div className="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
