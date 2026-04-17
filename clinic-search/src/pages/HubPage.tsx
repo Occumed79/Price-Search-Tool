@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 
 const LOGO_URL = "https://media.base44.com/images/public/69db321c6efb66daf94886ba/ad765f27e_omLogo_header.png";
 
-const ICONS: Record<string, string> = {
+const CARD_IMAGES: Record<string, string> = {
   "network-search":      "https://media.base44.com/images/public/69db321c6efb66daf94886ba/76eaef212_27eaa482-1634-442a-9c4b-71dd8b7f562d.png",
   "network-map":         "https://media.base44.com/images/public/69db321c6efb66daf94886ba/8cf8e806c_b30f67cd-6434-401b-b1f4-fc3b5a5845ab.png",
   "provider-directory":  "https://media.base44.com/images/public/69db321c6efb66daf94886ba/d657dde75_57995dde-592c-444b-8c5e-215a1ac7cff8.png",
@@ -79,102 +79,137 @@ export default function HubPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#04091a] relative overflow-hidden flex flex-col items-center justify-center px-6 py-16">
+    <div
+      className="min-h-screen w-full relative overflow-hidden flex flex-col items-center justify-center px-6 py-16"
+      style={{ background: "linear-gradient(170deg, #0c0628 0%, #080320 45%, #050118 100%)" }}
+    >
 
-      {/* ── Animated glowing orb background ── */}
+      {/* ── Keyframes ── */}
       <style>{`
         @keyframes hub-orb1 {
           0%   { transform: translate(0px, 0px) scale(1); }
-          25%  { transform: translate(60px, 80px) scale(1.12); }
-          50%  { transform: translate(20px, 150px) scale(0.92); }
-          75%  { transform: translate(-40px, 60px) scale(1.06); }
+          25%  { transform: translate(90px, 110px) scale(1.18); }
+          50%  { transform: translate(35px, 210px) scale(0.88); }
+          75%  { transform: translate(-70px, 90px) scale(1.12); }
           100% { transform: translate(0px, 0px) scale(1); }
         }
         @keyframes hub-orb2 {
           0%   { transform: translate(0px, 0px) scale(1); }
-          25%  { transform: translate(-80px, -60px) scale(1.15); }
-          50%  { transform: translate(-30px, -120px) scale(0.88); }
-          75%  { transform: translate(50px, -50px) scale(1.08); }
+          25%  { transform: translate(-110px, -90px) scale(1.22); }
+          50%  { transform: translate(-50px, -170px) scale(0.84); }
+          75%  { transform: translate(80px, -70px) scale(1.14); }
           100% { transform: translate(0px, 0px) scale(1); }
         }
         @keyframes hub-orb3 {
           0%   { transform: translate(0px, 0px) scale(1); }
-          33%  { transform: translate(100px, -80px) scale(1.2); }
-          66%  { transform: translate(-60px, 60px) scale(0.85); }
+          33%  { transform: translate(140px, -110px) scale(1.28); }
+          66%  { transform: translate(-90px, 90px) scale(0.80); }
           100% { transform: translate(0px, 0px) scale(1); }
         }
         @keyframes hub-pulse {
-          0%, 100% { opacity: 0.55; transform: scale(1); }
-          50%       { opacity: 0.85; transform: scale(1.18); }
+          0%, 100% { opacity: 0.70; transform: scale(1); }
+          50%       { opacity: 1.00; transform: scale(1.28); }
         }
         @keyframes hub-crown {
-          0%, 100% { opacity: 0.40; transform: scaleX(1); }
-          50%       { opacity: 0.60; transform: scaleX(1.08); }
+          0%, 100% { opacity: 0.65; transform: scaleX(1); }
+          50%       { opacity: 0.90; transform: scaleX(1.15); }
         }
       `}</style>
 
+      {/* ── Animated orb layer ── */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Crown beam — top center */}
+
+        {/* Crown beam — powerful violet-to-cyan */}
         <div style={{
-          position:"absolute", top:"-8%", left:"50%",
-          transform:"translateX(-50%)",
-          width:"900px", height:"500px",
-          borderRadius:"50%",
-          background:"radial-gradient(ellipse at center, rgba(147,210,255,0.45) 0%, rgba(96,165,250,0.20) 40%, transparent 70%)",
-          filter:"blur(50px)",
-          animation:"hub-crown 12s ease-in-out infinite",
+          position: "absolute", top: "-12%", left: "50%",
+          transform: "translateX(-50%)",
+          width: "1200px", height: "650px",
+          borderRadius: "50%",
+          background: "radial-gradient(ellipse at center, rgba(139,92,246,0.65) 0%, rgba(109,40,217,0.38) 28%, rgba(56,189,248,0.18) 52%, transparent 70%)",
+          filter: "blur(58px)",
+          animation: "hub-crown 10s ease-in-out infinite",
         }} />
-        {/* Left drift orb */}
+
+        {/* Left — deep violet */}
         <div style={{
-          position:"absolute", top:"20%", left:"-8%",
-          width:"580px", height:"580px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(56,189,248,0.55) 0%, rgba(56,189,248,0.25) 35%, transparent 70%)",
-          filter:"blur(38px)",
-          animation:"hub-orb1 22s ease-in-out infinite",
+          position: "absolute", top: "12%", left: "-12%",
+          width: "780px", height: "780px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at center, rgba(139,92,246,0.72) 0%, rgba(109,40,217,0.40) 35%, transparent 70%)",
+          filter: "blur(44px)",
+          animation: "hub-orb1 19s ease-in-out infinite",
         }} />
-        {/* Right drift orb */}
+
+        {/* Right bottom — indigo-purple */}
         <div style={{
-          position:"absolute", bottom:"-10%", right:"-6%",
-          width:"650px", height:"650px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(99,102,241,0.45) 0%, rgba(56,189,248,0.25) 40%, transparent 70%)",
-          filter:"blur(42px)",
-          animation:"hub-orb2 27s ease-in-out infinite",
-          animationDelay:"-11s",
+          position: "absolute", bottom: "-14%", right: "-10%",
+          width: "820px", height: "820px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at center, rgba(99,102,241,0.68) 0%, rgba(139,92,246,0.35) 38%, transparent 70%)",
+          filter: "blur(50px)",
+          animation: "hub-orb2 24s ease-in-out infinite",
+          animationDelay: "-13s",
         }} />
-        {/* Center accent */}
+
+        {/* Center soft violet bloom */}
         <div style={{
-          position:"absolute", top:"35%", left:"38%",
-          width:"420px", height:"420px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(0,200,230,0.40) 0%, rgba(56,189,248,0.18) 40%, transparent 70%)",
-          filter:"blur(34px)",
-          animation:"hub-orb3 17s ease-in-out infinite",
-          animationDelay:"-6s",
+          position: "absolute", top: "38%", left: "33%",
+          width: "560px", height: "560px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at center, rgba(167,139,250,0.55) 0%, rgba(139,92,246,0.28) 42%, transparent 70%)",
+          filter: "blur(40px)",
+          animation: "hub-orb3 14s ease-in-out infinite",
+          animationDelay: "-5s",
         }} />
-        {/* Top-right sparkle */}
+
+        {/* Top-right — cyan accent spark */}
         <div style={{
-          position:"absolute", top:"5%", right:"8%",
-          width:"260px", height:"260px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(147,210,255,0.70) 0%, rgba(56,189,248,0.35) 40%, transparent 70%)",
-          filter:"blur(22px)",
-          animation:"hub-pulse 8s ease-in-out infinite",
-          animationDelay:"-3s",
+          position: "absolute", top: "2%", right: "5%",
+          width: "340px", height: "340px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at center, rgba(56,189,248,0.85) 0%, rgba(14,165,233,0.50) 40%, transparent 70%)",
+          filter: "blur(26px)",
+          animation: "hub-pulse 6s ease-in-out infinite",
+          animationDelay: "-2s",
         }} />
-        {/* Bottom left fill */}
+
+        {/* Bottom-left — rich purple fill */}
         <div style={{
-          position:"absolute", bottom:"8%", left:"6%",
-          width:"340px", height:"340px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(59,130,246,0.50) 0%, rgba(96,165,250,0.22) 40%, transparent 70%)",
-          filter:"blur(30px)",
-          animation:"hub-pulse 14s ease-in-out infinite",
-          animationDelay:"-7s",
+          position: "absolute", bottom: "4%", left: "2%",
+          width: "460px", height: "460px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at center, rgba(124,58,237,0.68) 0%, rgba(139,92,246,0.30) 42%, transparent 70%)",
+          filter: "blur(38px)",
+          animation: "hub-pulse 11s ease-in-out infinite",
+          animationDelay: "-6s",
         }} />
+
+        {/* Bottom-center bridge orb */}
+        <div style={{
+          position: "absolute", bottom: "-6%", left: "28%",
+          width: "600px", height: "320px",
+          borderRadius: "50%",
+          background: "radial-gradient(ellipse at center, rgba(109,40,217,0.60) 0%, rgba(99,102,241,0.30) 45%, transparent 72%)",
+          filter: "blur(48px)",
+          animation: "hub-orb1 17s ease-in-out infinite",
+          animationDelay: "-8s",
+        }} />
+
+        {/* Mid-right — secondary cyan */}
+        <div style={{
+          position: "absolute", top: "45%", right: "-5%",
+          width: "380px", height: "380px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at center, rgba(56,189,248,0.55) 0%, rgba(14,165,233,0.22) 48%, transparent 74%)",
+          filter: "blur(34px)",
+          animation: "hub-orb3 21s ease-in-out infinite",
+          animationDelay: "-10s",
+        }} />
+
         {/* Noise grain overlay */}
-        <div className="absolute inset-0 opacity-[0.025]" style={{backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`}} />
+        <div className="absolute inset-0 opacity-[0.028]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+        }} />
       </div>
 
       {/* ── Header ── */}
@@ -184,47 +219,57 @@ export default function HubPage() {
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-center gap-4 mb-16 relative z-10"
       >
-        {/* Logo pill — glass style matching Insight Hub */}
-        <div className="inline-flex items-center justify-center mb-2 px-8 py-4 rounded-2xl"
+        {/* Logo pill */}
+        <div
+          className="inline-flex items-center justify-center mb-2 px-8 py-4 rounded-2xl"
           style={{
-            background:"linear-gradient(135deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.05) 100%)",
-            backdropFilter:"blur(32px) saturate(200%)",
-            WebkitBackdropFilter:"blur(32px) saturate(200%)",
-            border:"1px solid rgba(255,255,255,0.20)",
-            boxShadow:"0 0 0 1px rgba(255,255,255,0.05) inset, 0 12px 40px rgba(0,0,0,0.40), 0 0 80px rgba(147,210,255,0.18)",
+            background: "linear-gradient(135deg, rgba(255,255,255,0.13) 0%, rgba(139,92,246,0.08) 100%)",
+            backdropFilter: "blur(32px) saturate(200%)",
+            WebkitBackdropFilter: "blur(32px) saturate(200%)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            boxShadow: "0 0 0 1px rgba(255,255,255,0.05) inset, 0 12px 40px rgba(0,0,0,0.45), 0 0 80px rgba(139,92,246,0.28)",
           }}
         >
           <img src={LOGO_URL} alt="Occu-Med" className="h-14 w-auto object-contain" />
         </div>
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-none text-center"
+
+        <h1
+          className="text-5xl md:text-7xl font-bold tracking-tight leading-none text-center"
           style={{
-            background:"linear-gradient(135deg, #ffffff 0%, #93c5fd 40%, #e0f2fe 100%)",
-            WebkitBackgroundClip:"text",
-            WebkitTextFillColor:"transparent",
-            backgroundClip:"text",
-            filter:"drop-shadow(0 0 32px rgba(147,210,255,0.65)) drop-shadow(0 0 8px rgba(255,255,255,0.35))",
+            background: "linear-gradient(135deg, #ffffff 0%, #c4b5fd 38%, #e0f2fe 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            filter: "drop-shadow(0 0 36px rgba(139,92,246,0.75)) drop-shadow(0 0 10px rgba(255,255,255,0.35))",
           }}
         >
-          Network Search <span style={{
-            background:"linear-gradient(135deg, #38bdf8 0%, #93c5fd 60%, #bae6fd 100%)",
-            WebkitBackgroundClip:"text",
-            WebkitTextFillColor:"transparent",
-            backgroundClip:"text",
-          }}>Hub</span>
+          Network Search{" "}
+          <span style={{
+            background: "linear-gradient(135deg, #38bdf8 0%, #a78bfa 55%, #c4b5fd 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}>
+            Hub
+          </span>
         </h1>
-        <p className="text-lg md:text-xl text-sky-200/60 max-w-2xl mx-auto font-light leading-relaxed text-center tracking-wide">
+
+        <p
+          className="text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed text-center tracking-wide"
+          style={{ color: "rgba(196,181,253,0.62)" }}
+        >
           The network intelligence platform for Occu-Med — searching prices, mapping providers, and generating insights across every region.
         </p>
-        {/* Divider */}
+
         <div style={{
-          width:"128px", height:"1px",
-          background:"linear-gradient(90deg, transparent, rgba(147,210,255,0.6), transparent)",
-          marginTop:"4px",
+          width: "140px", height: "1px",
+          background: "linear-gradient(90deg, transparent, rgba(139,92,246,0.75), rgba(56,189,248,0.50), transparent)",
+          marginTop: "4px",
         }} />
       </motion.div>
 
       {/* ── Portal Grid ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full max-w-5xl relative z-10">
         {portals.map((portal, i) => (
           <motion.div
             key={portal.id}
@@ -232,92 +277,165 @@ export default function HubPage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.55, delay: 0.1 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
             onClick={() => handlePortalClick(portal)}
-            className="group relative rounded-2xl flex flex-col items-center text-center gap-5 p-8 transition-all duration-300"
+            className="group relative rounded-2xl overflow-hidden flex flex-col transition-all duration-300"
             style={{
               background: portal.active
-                ? "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(56,189,248,0.06) 50%, rgba(255,255,255,0.04) 100%)"
-                : "rgba(255,255,255,0.03)",
-              backdropFilter: "blur(20px) saturate(180%)",
-              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                ? "linear-gradient(170deg, rgba(139,92,246,0.14) 0%, rgba(22,14,50,0.88) 35%, rgba(12,7,28,0.92) 100%)"
+                : "rgba(12,7,28,0.65)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
               border: portal.active
-                ? "1px solid rgba(147,210,255,0.20)"
+                ? "1px solid rgba(139,92,246,0.28)"
                 : "1px solid rgba(255,255,255,0.07)",
               boxShadow: portal.active
-                ? "0 4px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10), 0 0 40px rgba(56,189,248,0.06)"
-                : "0 4px 16px rgba(0,0,0,0.25)",
+                ? "0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10), 0 0 48px rgba(139,92,246,0.10)"
+                : "0 4px 16px rgba(0,0,0,0.40)",
               cursor: portal.active ? "pointer" : "not-allowed",
             }}
             onMouseEnter={e => {
               if (!portal.active) return;
-              (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)";
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.14), 0 0 60px rgba(56,189,248,0.14)";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(147,210,255,0.35)";
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "translateY(-5px)";
+              el.style.boxShadow = "0 20px 64px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.16), 0 0 70px rgba(139,92,246,0.25), 0 0 140px rgba(99,102,241,0.12)";
+              el.style.borderColor = "rgba(167,139,250,0.48)";
             }}
             onMouseLeave={e => {
               if (!portal.active) return;
-              (e.currentTarget as HTMLElement).style.transform = "";
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10), 0 0 40px rgba(56,189,248,0.06)";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(147,210,255,0.20)";
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = "";
+              el.style.boxShadow = "0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10), 0 0 48px rgba(139,92,246,0.10)";
+              el.style.borderColor = "rgba(139,92,246,0.28)";
             }}
           >
-            {/* Icon */}
-            <div className="relative">
+            {/* ── Photo banner (top ~45% of card) ── */}
+            <div className="relative w-full overflow-hidden flex-shrink-0" style={{ height: "168px" }}>
+
+              {/* Indicator dot — top-left, Insight Hub style */}
+              <div
+                className="absolute top-3 left-3 z-20 w-7 h-7 rounded-full flex items-center justify-center"
+                style={{
+                  background: "rgba(20,12,44,0.80)",
+                  backdropFilter: "blur(10px)",
+                  border: `1px solid ${portal.active ? "rgba(167,139,250,0.45)" : "rgba(255,255,255,0.12)"}`,
+                  boxShadow: portal.active ? "0 0 14px rgba(139,92,246,0.40)" : "none",
+                }}
+              >
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{
+                    background: portal.active
+                      ? "radial-gradient(circle, rgba(167,139,250,1) 0%, rgba(139,92,246,0.7) 100%)"
+                      : "rgba(100,100,120,0.45)",
+                    boxShadow: portal.active ? "0 0 8px rgba(139,92,246,0.80)" : "none",
+                  }}
+                />
+              </div>
+
               <img
-                src={ICONS[portal.id]}
+                src={CARD_IMAGES[portal.id]}
                 alt={portal.label}
-                className={`w-64 h-64 object-contain transition-transform duration-300 drop-shadow-2xl
-                  ${portal.active ? "group-hover:scale-110" : "grayscale opacity-40"}`}
+                className={`w-full h-full object-cover object-center transition-transform duration-700 ${
+                  portal.active ? "group-hover:scale-105" : "grayscale opacity-35"
+                }`}
               />
+
+              {/* Gradient fade from image into card body */}
+              <div
+                className="absolute inset-x-0 bottom-0 h-20"
+                style={{ background: "linear-gradient(to top, rgba(14,8,32,0.96) 0%, rgba(14,8,32,0.40) 60%, transparent 100%)" }}
+              />
+
+              {/* Top-edge vignette */}
+              <div
+                className="absolute inset-x-0 top-0 h-10"
+                style={{ background: "linear-gradient(to bottom, rgba(14,8,32,0.45), transparent)" }}
+              />
+
+              {/* Hover tint overlay */}
               {portal.active && (
-                <div className="absolute inset-0 rounded-full blur-2xl scale-125 -z-10 transition-all duration-300"
-                  style={{ background: "rgba(56,189,248,0.18)" }} />
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+                  style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.10) 0%, rgba(56,189,248,0.04) 100%)" }}
+                />
               )}
             </div>
 
-            {/* Label */}
-            <div className="flex flex-col gap-1.5">
-              <h2 className="text-base font-semibold text-white/90 leading-snug tracking-tight">
+            {/* ── Text content below image ── */}
+            <div className="flex flex-col gap-2 px-5 pt-3 pb-5 flex-1">
+
+              {/* Top specular highlight on card body */}
+              <div
+                className="absolute inset-x-0 top-0 h-px"
+                style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.20), transparent)" }}
+              />
+
+              <h2
+                className="text-[15px] font-semibold leading-snug tracking-tight"
+                style={{ color: portal.active ? "rgba(255,255,255,0.93)" : "rgba(255,255,255,0.35)" }}
+              >
                 {portal.label}
               </h2>
-              <p className="text-sm leading-relaxed" style={{ color: "rgba(186,230,253,0.50)" }}>
+
+              <p
+                className="text-[13px] leading-relaxed flex-1"
+                style={{ color: portal.active ? "rgba(196,181,253,0.58)" : "rgba(255,255,255,0.22)" }}
+              >
                 {portal.description}
               </p>
-            </div>
 
-            {/* Footer */}
-            <div className="mt-auto pt-2 w-full flex items-center justify-between">
-              {portal.active ? (
-                <>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full"
-                      style={{ background:"rgba(56,189,248,0.15)", border:"1px solid rgba(56,189,248,0.30)", color:"rgb(125,211,252)" }}>
-                      Live
-                    </span>
-                    {portal.external && (
-                      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full"
-                        style={{ background:"rgba(168,85,247,0.15)", border:"1px solid rgba(168,85,247,0.30)", color:"rgb(216,180,254)" }}>
-                        External
+              {/* Footer row */}
+              <div className="flex items-center justify-between pt-2 mt-auto">
+                {portal.active ? (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full"
+                        style={{
+                          background: "rgba(139,92,246,0.18)",
+                          border: "1px solid rgba(139,92,246,0.38)",
+                          color: "rgb(196,181,253)",
+                        }}
+                      >
+                        Live
                       </span>
-                    )}
-                  </div>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:translate-x-1"
-                    style={{ background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.12)", color:"rgb(125,211,252)" }}>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                </>
-              ) : (
-                <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full"
-                  style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.10)", color:"rgba(255,255,255,0.30)" }}>
-                  Coming Soon
-                </span>
-              )}
+                      {portal.external && (
+                        <span
+                          className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full"
+                          style={{
+                            background: "rgba(56,189,248,0.14)",
+                            border: "1px solid rgba(56,189,248,0.30)",
+                            color: "rgb(125,211,252)",
+                          }}
+                        >
+                          External
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-transform duration-200 group-hover:translate-x-1"
+                      style={{
+                        background: "rgba(139,92,246,0.16)",
+                        border: "1px solid rgba(167,139,250,0.32)",
+                        color: "rgb(167,139,250)",
+                      }}
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  </>
+                ) : (
+                  <span
+                    className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      color: "rgba(255,255,255,0.28)",
+                    }}
+                  >
+                    Coming Soon
+                  </span>
+                )}
+              </div>
             </div>
-
-            {/* Specular edge highlights */}
-            <div className="absolute inset-x-0 top-0 h-px rounded-t-2xl"
-              style={{ background:"linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent)" }} />
-            <div className="absolute inset-y-0 left-0 w-px rounded-l-2xl"
-              style={{ background:"linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04), transparent)" }} />
           </motion.div>
         ))}
       </div>
@@ -328,7 +446,7 @@ export default function HubPage() {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 0.7 }}
         className="mt-20 text-[11px] tracking-[0.25em] uppercase relative z-10"
-        style={{ color: "rgba(255,255,255,0.20)" }}
+        style={{ color: "rgba(255,255,255,0.18)" }}
       >
         Occu-Med Network Search Hub © 2025
       </motion.p>

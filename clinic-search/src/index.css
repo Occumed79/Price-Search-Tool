@@ -231,73 +231,73 @@
 
 .hub-bg {
   background:
-    /* Crown light beam */
-    radial-gradient(ellipse at 50% -5%,  rgba(147, 210, 255, 0.35) 0%, transparent 50%),
-    /* Upper-left fill */
-    radial-gradient(ellipse at 10%  20%, rgba(96,  165, 250, 0.22) 0%, transparent 45%),
-    /* Upper-right fill */
-    radial-gradient(ellipse at 90%  20%, rgba(56,  189, 248, 0.20) 0%, transparent 45%),
+    /* Crown beam — purple-dominant */
+    radial-gradient(ellipse at 50% -5%,  rgba(139, 92,  246, 0.50) 0%, rgba(56, 189, 248, 0.18) 40%, transparent 60%),
+    /* Upper-left — violet */
+    radial-gradient(ellipse at 10%  20%, rgba(139, 92,  246, 0.30) 0%, transparent 45%),
+    /* Upper-right — indigo */
+    radial-gradient(ellipse at 90%  20%, rgba(99,  102, 241, 0.25) 0%, transparent 45%),
     /* Lower purple depth */
-    radial-gradient(ellipse at 30%  90%, rgba(99,  102, 241, 0.16) 0%, transparent 45%),
-    radial-gradient(ellipse at 70%  90%, rgba(59,  130, 246, 0.14) 0%, transparent 45%),
-    /* Deep base */
-    linear-gradient(170deg, #08132b 0%, #060e22 55%, #04091a 100%);
+    radial-gradient(ellipse at 30%  90%, rgba(109, 40,  217, 0.28) 0%, transparent 45%),
+    radial-gradient(ellipse at 70%  90%, rgba(124, 58,  237, 0.22) 0%, transparent 45%),
+    /* Deep purple-navy base */
+    linear-gradient(170deg, #0c0628 0%, #080320 55%, #050118 100%);
   min-height: 100vh;
 }
 
-/* Logo glass pill — strong frosted shine */
+/* Logo glass pill — strong frosted shine with purple glow */
 .hub-logo-wrap {
-  background: linear-gradient(135deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.05) 100%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.13) 0%, rgba(139,92,246,0.08) 100%);
   backdrop-filter: blur(32px) saturate(200%) brightness(1.2);
   -webkit-backdrop-filter: blur(32px) saturate(200%) brightness(1.2);
-  border: 1px solid rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.20);
   box-shadow:
     0 0 0 1px rgba(255,255,255,0.06) inset,
     0 12px 40px rgba(0,0,0,0.45),
-    0 0 80px rgba(147,210,255,0.18),
-    0 0 120px rgba(96,165,250,0.10);
+    0 0 80px rgba(139,92,246,0.30),
+    0 0 140px rgba(109,40,217,0.15);
 }
 
-/* Title — blazing white-to-sky gradient */
+/* Title — white-to-violet gradient */
 .hub-title {
-  background: linear-gradient(135deg, #ffffff 0%, #93c5fd 40%, #e0f2fe 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 38%, #e0f2fe 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 0 32px rgba(147,210,255,0.7)) drop-shadow(0 0 8px rgba(255,255,255,0.4));
+  filter: drop-shadow(0 0 36px rgba(139,92,246,0.75)) drop-shadow(0 0 10px rgba(255,255,255,0.35));
 }
 
 .hub-subtitle {
-  color: rgba(147, 210, 255, 0.65);
+  color: rgba(196, 181, 253, 0.62);
   letter-spacing: 0.22em;
-  text-shadow: 0 0 20px rgba(147,210,255,0.4);
+  text-shadow: 0 0 20px rgba(139,92,246,0.40);
 }
 
-/* Glowing divider bar */
+/* Glowing divider bar — purple-to-cyan */
 .hub-divider {
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(147,210,255,0.7), rgba(255,255,255,0.5), rgba(147,210,255,0.7), transparent);
-  box-shadow: 0 0 12px rgba(147,210,255,0.6), 0 0 24px rgba(147,210,255,0.3);
+  background: linear-gradient(90deg, transparent, rgba(139,92,246,0.80), rgba(56,189,248,0.55), rgba(139,92,246,0.80), transparent);
+  box-shadow: 0 0 14px rgba(139,92,246,0.65), 0 0 28px rgba(139,92,246,0.30);
   border-radius: 2px;
 }
 
-/* Portal card — rich glass panel */
+/* Portal card — rich purple-tinted glass panel */
 .hub-card {
   background: linear-gradient(
-    160deg,
-    rgba(255,255,255,0.10) 0%,
-    rgba(255,255,255,0.04) 40%,
-    rgba(147,210,255,0.04) 100%
+    170deg,
+    rgba(139,92,246,0.14) 0%,
+    rgba(22,14,50,0.88) 35%,
+    rgba(12,7,28,0.92) 100%
   );
-  backdrop-filter: blur(40px) saturate(200%) brightness(1.08);
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.08);
-  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(139,92,246,0.28);
   box-shadow:
-    0 2px 0 rgba(255,255,255,0.10) inset,
+    0 1px 0 rgba(255,255,255,0.10) inset,
     0 -1px 0 rgba(0,0,0,0.30) inset,
-    0 12px 48px rgba(0,0,0,0.55),
-    0 4px 16px rgba(0,0,0,0.35),
-    0 0 0 1px rgba(147,210,255,0.06);
+    0 12px 48px rgba(0,0,0,0.60),
+    0 4px 16px rgba(0,0,0,0.40),
+    0 0 48px rgba(139,92,246,0.10);
   position: relative;
   overflow: hidden;
 }
@@ -309,7 +309,7 @@
   inset: 0;
   background: linear-gradient(
     130deg,
-    rgba(255,255,255,0.09) 0%,
+    rgba(255,255,255,0.08) 0%,
     rgba(255,255,255,0.02) 35%,
     transparent 65%
   );
@@ -319,29 +319,29 @@
 }
 
 .hub-card-active:hover {
-  border-color: rgba(147,210,255,0.35);
+  border-color: rgba(167,139,250,0.48);
   box-shadow:
-    0 2px 0 rgba(255,255,255,0.14) inset,
+    0 2px 0 rgba(255,255,255,0.15) inset,
     0 -1px 0 rgba(0,0,0,0.30) inset,
     0 20px 64px rgba(0,0,0,0.65),
-    0 0 40px rgba(147,210,255,0.14),
-    0 0 80px rgba(96,165,250,0.08),
-    0 0 0 1px rgba(147,210,255,0.18);
-  transform: translateY(-2px) scale(1.018);
+    0 0 70px rgba(139,92,246,0.25),
+    0 0 140px rgba(99,102,241,0.12),
+    0 0 0 1px rgba(167,139,250,0.20);
+  transform: translateY(-5px);
 }
 
 .hub-card-active:hover::before {
   background: linear-gradient(
     130deg,
-    rgba(255,255,255,0.13) 0%,
+    rgba(255,255,255,0.12) 0%,
     rgba(255,255,255,0.04) 35%,
     transparent 65%
   );
 }
 
 .hub-card-inactive {
-  opacity: 0.55;
-  filter: saturate(0.5);
+  opacity: 0.50;
+  filter: saturate(0.4);
 }
 
 /* Icon wrapper ambient bloom */
@@ -574,62 +574,63 @@
   z-index: 0;
 }
 
-/* ── Hub / home page orbs ── */
-.hub-orb-a {            /* top centre — sky blue */
+/* ── Hub / home page orbs — purple-dominant palette ── */
+.hub-orb-a {            /* top centre — violet crown */
   position: absolute;
-  width: 800px; height: 450px;
-  top: -130px; left: calc(50% - 400px);
+  width: 900px; height: 520px;
+  top: -140px; left: calc(50% - 450px);
   border-radius: 50%;
   background: radial-gradient(ellipse at center,
-    rgba(56, 189, 248, 0.72) 0%,
-    rgba(14, 165, 233, 0.34) 45%,
-    transparent 72%);
-  filter: blur(38px);
+    rgba(139, 92,  246, 0.75) 0%,
+    rgba(109, 40,  217, 0.40) 42%,
+    rgba(56,  189, 248, 0.12) 65%,
+    transparent 75%);
+  filter: blur(44px);
   animation:
-    orb-drift-a  22s ease-in-out         infinite,
-    orb-breathe   8s ease-in-out         infinite;
+    orb-drift-a  20s ease-in-out         infinite,
+    orb-breathe   7s ease-in-out         infinite;
 }
-.hub-orb-b {            /* left — cyan */
+.hub-orb-b {            /* left — deep violet */
   position: absolute;
-  width: 480px; height: 480px;
-  top: 28%; left: -130px;
+  width: 580px; height: 580px;
+  top: 22%; left: -140px;
   border-radius: 50%;
   background: radial-gradient(ellipse at center,
-    rgba(34, 211, 238, 0.62) 0%,
-    rgba(6,  182, 212, 0.28) 48%,
+    rgba(124, 58,  237, 0.72) 0%,
+    rgba(139, 92,  246, 0.35) 46%,
     transparent 74%);
-  filter: blur(32px);
+  filter: blur(36px);
   animation:
-    orb-drift-b  26s ease-in-out  -9s   infinite,
-    orb-breathe  10s ease-in-out  -3s   infinite;
+    orb-drift-b  24s ease-in-out  -9s   infinite,
+    orb-breathe   9s ease-in-out  -3s   infinite;
 }
-.hub-orb-c {            /* right — light blue */
+.hub-orb-c {            /* right — indigo-cyan blend */
   position: absolute;
-  width: 450px; height: 450px;
-  top: 22%; right: -110px;
+  width: 520px; height: 520px;
+  top: 18%; right: -120px;
   border-radius: 50%;
   background: radial-gradient(ellipse at center,
-    rgba(147, 197, 253, 0.58) 0%,
-    rgba(96,  165, 250, 0.25) 48%,
+    rgba(99,  102, 241, 0.68) 0%,
+    rgba(56,  189, 248, 0.30) 46%,
     transparent 74%);
-  filter: blur(32px);
+  filter: blur(36px);
   animation:
-    orb-drift-c  20s ease-in-out -14s   infinite,
-    orb-breathe  12s ease-in-out  -6s   infinite;
+    orb-drift-c  18s ease-in-out -14s   infinite,
+    orb-breathe  11s ease-in-out  -6s   infinite;
 }
-.hub-orb-d {            /* bottom — deeper blue */
+.hub-orb-d {            /* bottom — purple-indigo base */
   position: absolute;
-  width: 650px; height: 320px;
-  bottom: -70px; left: calc(50% - 325px);
+  width: 720px; height: 360px;
+  bottom: -80px; left: calc(50% - 360px);
   border-radius: 50%;
   background: radial-gradient(ellipse at center,
-    rgba(99, 179, 237, 0.52) 0%,
-    rgba(59, 130, 246, 0.22) 48%,
+    rgba(109, 40,  217, 0.65) 0%,
+    rgba(124, 58,  237, 0.32) 46%,
     transparent 74%);
-  filter: blur(42px);
+  filter: blur(48px);
   animation:
-    orb-drift-a  28s ease-in-out  -6s   infinite,
-    orb-breathe   9s ease-in-out  -1s   infinite;
+    orb-drift-a  26s ease-in-out  -6s   infinite,
+    orb-breathe   8s ease-in-out  -1s   infinite;
 }
 
 /* ── Portal / tool page orbs ── (slightly smaller, same vibrancy) */
