@@ -226,73 +226,91 @@
 .badge-weak      { background: rgba(100, 116, 139, 0.15); color: rgb(148, 163, 184); border-color: rgba(100, 116, 139, 0.25); }
 
 /* ═══════════════════════════════════════════════════════════════
-   HUB v4 — Sunset · macOS Tahoe Glass
-   Palette: cream → amber → orange → crimson → deep purple
-   Animated sun-ray light beams across the background
+   HUB v5 — Sunset · macOS Tahoe Glass · Fixed
+   - Dark moody base (not orange soup)
+   - Wide hazy sun rays (not sharp DJ beams)
+   - White logo pill
+   - Title never clips
 ══════════════════════════════════════════════════════════════ */
 
-/* ── Animated sun-ray keyframes ── */
-@keyframes sunray {
-  0%   { opacity: 0;    transform: rotate(var(--ray-angle)) scaleY(0.6); }
-  25%  { opacity: var(--ray-max-opacity); }
-  75%  { opacity: var(--ray-max-opacity); }
-  100% { opacity: 0;    transform: rotate(calc(var(--ray-angle) + 8deg)) scaleY(1.1); }
+/* ── Hazy sun ray keyframes — slow, gentle, wide spread ── */
+@keyframes sunHaze {
+  0%   { opacity: 0; }
+  20%  { opacity: var(--haze-opacity); }
+  80%  { opacity: var(--haze-opacity); }
+  100% { opacity: 0; }
 }
-@keyframes sunrise {
-  0%   { transform: translateY(0px) scale(1);   opacity: 0.7; }
-  50%  { transform: translateY(-18px) scale(1.04); opacity: 1; }
-  100% { transform: translateY(0px) scale(1);   opacity: 0.7; }
+@keyframes sunPulse {
+  0%, 100% { transform: translateX(-50%) scale(1);    opacity: 0.55; }
+  50%       { transform: translateX(-50%) scale(1.06); opacity: 0.80; }
 }
-@keyframes hubFloat {
-  0%,100% { transform: translateY(0px); }
-  50%      { transform: translateY(-6px); }
+@keyframes bgShimmer {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1.0; }
 }
 
-/* ── Background ── */
+/* ── Background — dark twilight-sunset, NOT orange soup ── */
 .hub-bg {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
+  /* Deep dark base: near-black navy → dark wine → deep indigo */
   background: linear-gradient(
-    175deg,
-    #1a0a00 0%,
-    #2d1200 8%,
-    #5c2200 18%,
-    #8b3a00 28%,
-    #b84a00 38%,
-    #c85a10 46%,
-    #a04010 54%,
-    #78200a 64%,
-    #4a1020 74%,
-    #2e0830 84%,
-    #1a0420 100%
+    180deg,
+    #0a0408 0%,
+    #150810 12%,
+    #1e0c16 25%,
+    #200e10 38%,
+    #18080c 55%,
+    #100610 72%,
+    #0c0418 88%,
+    #080312 100%
   );
 }
 
-/* ── Sun glow orb (sits at horizon ~38% down) ── */
+/* ── Wide soft sun orb at horizon (hazy, not sharp) ── */
 .hub-bg::before {
   content: "";
   position: absolute;
-  top: 28%;
+  top: 22%;
   left: 50%;
   transform: translateX(-50%);
-  width: 600px;
-  height: 600px;
+  width: 900px;
+  height: 500px;
   border-radius: 50%;
   background: radial-gradient(
-    circle,
-    rgba(255, 220, 120, 0.55) 0%,
-    rgba(255, 160, 40,  0.35) 25%,
-    rgba(220, 80,  20,  0.20) 50%,
-    transparent 70%
+    ellipse at center,
+    rgba(255, 230, 140, 0.22) 0%,
+    rgba(255, 160, 60,  0.14) 20%,
+    rgba(220, 90,  30,  0.08) 40%,
+    rgba(160, 40,  20,  0.04) 60%,
+    transparent 75%
   );
-  filter: blur(40px);
-  animation: sunrise 8s ease-in-out infinite;
+  filter: blur(60px);
+  animation: sunPulse 10s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
 }
 
-/* ── Sun ray beams ── */
+/* ── Subtle horizon color band ── */
+.hub-bg::after {
+  content: "";
+  position: absolute;
+  top: 18%;
+  left: 0; right: 0;
+  height: 280px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(220, 100, 30, 0.06) 35%,
+    rgba(180, 50, 20, 0.04) 65%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Sun rays container ── */
 .hub-sunrays {
   position: absolute;
   inset: 0;
@@ -300,235 +318,265 @@
   z-index: 0;
   overflow: hidden;
 }
+
+/* Wide hazy rays — each is a blurred wedge, not a sharp line */
 .hub-ray {
   position: absolute;
-  top: 34%;
+  /* Rays fan out from above the horizon point */
+  top: -10%;
   left: 50%;
-  width: 3px;
-  height: 130vh;
   transform-origin: top center;
-  border-radius: 0 0 4px 4px;
+  /* Wide wedge shape */
+  border-radius: 0 0 60% 60%;
 }
-.hub-ray:nth-child(1)  { --ray-angle: -55deg; --ray-max-opacity: 0.13; background: linear-gradient(to bottom, rgba(255,220,120,0.8), transparent); animation: sunray 7s 0.0s ease-in-out infinite; transform: rotate(-55deg) translateX(-50%); }
-.hub-ray:nth-child(2)  { --ray-angle: -42deg; --ray-max-opacity: 0.18; background: linear-gradient(to bottom, rgba(255,180,60,0.8),  transparent); animation: sunray 9s 0.8s ease-in-out infinite; transform: rotate(-42deg) translateX(-50%); width: 5px; }
-.hub-ray:nth-child(3)  { --ray-angle: -30deg; --ray-max-opacity: 0.22; background: linear-gradient(to bottom, rgba(255,200,80,0.9),  transparent); animation: sunray 6s 1.5s ease-in-out infinite; transform: rotate(-30deg) translateX(-50%); width: 8px; }
-.hub-ray:nth-child(4)  { --ray-angle: -18deg; --ray-max-opacity: 0.16; background: linear-gradient(to bottom, rgba(255,160,40,0.8),  transparent); animation: sunray 8s 2.2s ease-in-out infinite; transform: rotate(-18deg) translateX(-50%); }
-.hub-ray:nth-child(5)  { --ray-angle: -8deg;  --ray-max-opacity: 0.28; background: linear-gradient(to bottom, rgba(255,220,100,1.0), transparent); animation: sunray 5s 0.3s ease-in-out infinite; transform: rotate(-8deg)  translateX(-50%); width: 12px; }
-.hub-ray:nth-child(6)  { --ray-angle:  0deg;  --ray-max-opacity: 0.32; background: linear-gradient(to bottom, rgba(255,240,160,1.0), transparent); animation: sunray 7s 1.0s ease-in-out infinite; transform: rotate(0deg)   translateX(-50%); width: 16px; }
-.hub-ray:nth-child(7)  { --ray-angle:  8deg;  --ray-max-opacity: 0.28; background: linear-gradient(to bottom, rgba(255,220,100,1.0), transparent); animation: sunray 5s 1.8s ease-in-out infinite; transform: rotate(8deg)   translateX(-50%); width: 12px; }
-.hub-ray:nth-child(8)  { --ray-angle:  18deg; --ray-max-opacity: 0.16; background: linear-gradient(to bottom, rgba(255,160,40,0.8),  transparent); animation: sunray 8s 0.6s ease-in-out infinite; transform: rotate(18deg)  translateX(-50%); }
-.hub-ray:nth-child(9)  { --ray-angle:  30deg; --ray-max-opacity: 0.22; background: linear-gradient(to bottom, rgba(255,200,80,0.9),  transparent); animation: sunray 6s 2.5s ease-in-out infinite; transform: rotate(30deg)  translateX(-50%); width: 8px; }
-.hub-ray:nth-child(10) { --ray-angle:  42deg; --ray-max-opacity: 0.18; background: linear-gradient(to bottom, rgba(255,180,60,0.8),  transparent); animation: sunray 9s 1.2s ease-in-out infinite; transform: rotate(42deg)  translateX(-50%); width: 5px; }
-.hub-ray:nth-child(11) { --ray-angle:  55deg; --ray-max-opacity: 0.13; background: linear-gradient(to bottom, rgba(255,220,120,0.8), transparent); animation: sunray 7s 2.0s ease-in-out infinite; transform: rotate(55deg)  translateX(-50%); }
 
-/* ── Horizon glow band ── */
+/* Ray definitions — very wide, very blurry, slow pulse */
+.hub-ray:nth-child(1) {
+  --haze-opacity: 0.07;
+  width: 280px; height: 100vh;
+  margin-left: -140px;
+  background: linear-gradient(to bottom, rgba(255,240,180,0.9) 0%, rgba(255,180,60,0.3) 30%, transparent 70%);
+  filter: blur(55px);
+  transform: rotate(-52deg);
+  animation: sunHaze 12s 0s ease-in-out infinite;
+}
+.hub-ray:nth-child(2) {
+  --haze-opacity: 0.10;
+  width: 320px; height: 100vh;
+  margin-left: -160px;
+  background: linear-gradient(to bottom, rgba(255,220,120,0.9) 0%, rgba(240,140,40,0.3) 35%, transparent 65%);
+  filter: blur(65px);
+  transform: rotate(-35deg);
+  animation: sunHaze 15s 2s ease-in-out infinite;
+}
+.hub-ray:nth-child(3) {
+  --haze-opacity: 0.13;
+  width: 400px; height: 100vh;
+  margin-left: -200px;
+  background: linear-gradient(to bottom, rgba(255,240,160,1.0) 0%, rgba(255,200,80,0.4) 30%, transparent 60%);
+  filter: blur(70px);
+  transform: rotate(-18deg);
+  animation: sunHaze 9s 1s ease-in-out infinite;
+}
+.hub-ray:nth-child(4) {
+  --haze-opacity: 0.16;
+  width: 500px; height: 110vh;
+  margin-left: -250px;
+  background: linear-gradient(to bottom, rgba(255,250,200,1.0) 0%, rgba(255,220,100,0.5) 25%, rgba(255,160,40,0.2) 55%, transparent 70%);
+  filter: blur(80px);
+  transform: rotate(-6deg);
+  animation: sunHaze 11s 0.5s ease-in-out infinite;
+}
+.hub-ray:nth-child(5) {
+  --haze-opacity: 0.18;
+  width: 560px; height: 115vh;
+  margin-left: -280px;
+  background: linear-gradient(to bottom, rgba(255,255,220,1.0) 0%, rgba(255,230,120,0.5) 22%, rgba(255,180,60,0.2) 50%, transparent 68%);
+  filter: blur(90px);
+  transform: rotate(0deg);
+  animation: sunHaze 13s 1.5s ease-in-out infinite;
+}
+.hub-ray:nth-child(6) {
+  --haze-opacity: 0.16;
+  width: 500px; height: 110vh;
+  margin-left: -250px;
+  background: linear-gradient(to bottom, rgba(255,250,200,1.0) 0%, rgba(255,220,100,0.5) 25%, rgba(255,160,40,0.2) 55%, transparent 70%);
+  filter: blur(80px);
+  transform: rotate(6deg);
+  animation: sunHaze 11s 3s ease-in-out infinite;
+}
+.hub-ray:nth-child(7) {
+  --haze-opacity: 0.13;
+  width: 400px; height: 100vh;
+  margin-left: -200px;
+  background: linear-gradient(to bottom, rgba(255,240,160,1.0) 0%, rgba(255,200,80,0.4) 30%, transparent 60%);
+  filter: blur(70px);
+  transform: rotate(18deg);
+  animation: sunHaze 9s 2.5s ease-in-out infinite;
+}
+.hub-ray:nth-child(8) {
+  --haze-opacity: 0.10;
+  width: 320px; height: 100vh;
+  margin-left: -160px;
+  background: linear-gradient(to bottom, rgba(255,220,120,0.9) 0%, rgba(240,140,40,0.3) 35%, transparent 65%);
+  filter: blur(65px);
+  transform: rotate(35deg);
+  animation: sunHaze 15s 4s ease-in-out infinite;
+}
+.hub-ray:nth-child(9) {
+  --haze-opacity: 0.07;
+  width: 280px; height: 100vh;
+  margin-left: -140px;
+  background: linear-gradient(to bottom, rgba(255,240,180,0.9) 0%, rgba(255,180,60,0.3) 30%, transparent 70%);
+  filter: blur(55px);
+  transform: rotate(52deg);
+  animation: sunHaze 12s 1s ease-in-out infinite;
+}
+
+/* ── Horizon warm glow band ── */
 .hub-horizon {
   position: absolute;
-  top: 34%;
+  top: 22%;
   left: 0; right: 0;
-  height: 180px;
+  height: 200px;
   background: linear-gradient(
     to bottom,
     transparent,
-    rgba(255, 160, 40, 0.12) 40%,
-    rgba(200, 80, 20, 0.08) 70%,
+    rgba(255, 140, 40, 0.07) 40%,
+    rgba(200, 70, 20, 0.05) 70%,
     transparent
   );
   pointer-events: none;
   z-index: 0;
 }
 
-/* ── Logo glass pill ── */
+/* ── Logo pill — WHITE background like reference ── */
 .hub-logo-wrap {
-  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 100%);
-  backdrop-filter: blur(32px) saturate(180%) brightness(1.15);
-  -webkit-backdrop-filter: blur(32px) saturate(180%) brightness(1.15);
-  border: 1px solid rgba(255,255,255,0.28);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.80);
   box-shadow:
-    0 0 0 1px rgba(255,255,255,0.08) inset,
-    0 12px 40px rgba(0,0,0,0.5),
-    0 0 60px rgba(255,160,60,0.18),
-    0 0 120px rgba(255,120,20,0.10);
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.20),
+    0 0 40px rgba(255, 180, 60, 0.12);
+  border-radius: 18px;
 }
 
-/* ── Title — warm white-to-amber gradient ── */
+/* ── Title — warm gradient, fully visible ── */
 .hub-title {
   font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(135deg, #fff8f0 0%, #ffd580 35%, #ffb040 65%, #ff8040 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #ffe8b0 30%, #ffcc70 60%, #ff9a40 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 0 40px rgba(255,160,60,0.6)) drop-shadow(0 0 10px rgba(255,255,200,0.3));
+  filter: drop-shadow(0 0 30px rgba(255,180,60,0.45)) drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  line-height: 1.1;
+  padding-bottom: 4px; /* prevent descender clipping */
 }
 
 .hub-subtitle {
-  color: rgba(255, 200, 120, 0.70);
-  letter-spacing: 0.22em;
-  text-shadow: 0 0 20px rgba(255,160,60,0.4);
+  color: rgba(255, 200, 120, 0.60);
+  letter-spacing: 0.20em;
+  text-shadow: 0 0 16px rgba(255,160,60,0.30);
   font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
 }
 
-/* ── Glowing amber divider ── */
+/* ── Warm amber divider ── */
 .hub-divider {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255,180,60,0.8), rgba(255,240,160,0.9), rgba(255,180,60,0.8), transparent);
-  box-shadow: 0 0 12px rgba(255,160,40,0.7), 0 0 28px rgba(255,120,20,0.4);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,200,80,0.6), rgba(255,240,160,0.8), rgba(255,200,80,0.6), transparent);
+  box-shadow: 0 0 8px rgba(255,160,40,0.5), 0 0 20px rgba(255,120,20,0.25);
   border-radius: 2px;
 }
 
-/* ── Portal card — sunset glass panel ── */
+/* ── Portal card — glass, dark base ── */
 .hub-card {
   background: linear-gradient(
     160deg,
-    rgba(255,200,120,0.10) 0%,
-    rgba(180,80,20,0.06)  40%,
-    rgba(60,10,30,0.12)   100%
+    rgba(255,200,100,0.07) 0%,
+    rgba(120,40,10,0.05)  40%,
+    rgba(30,5,20,0.10)    100%
   );
-  backdrop-filter: blur(36px) saturate(180%) brightness(1.06);
-  -webkit-backdrop-filter: blur(36px) saturate(180%) brightness(1.06);
-  border: 1px solid rgba(255,200,120,0.18);
+  backdrop-filter: blur(32px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: blur(32px) saturate(160%) brightness(1.05);
+  border: 1px solid rgba(255,180,80,0.14);
   box-shadow:
-    0 2px 0 rgba(255,255,200,0.08) inset,
-    0 -1px 0 rgba(0,0,0,0.40) inset,
-    0 16px 56px rgba(0,0,0,0.60),
-    0 4px 16px rgba(0,0,0,0.40),
-    0 0 0 1px rgba(255,140,40,0.08);
+    0 2px 0 rgba(255,220,100,0.07) inset,
+    0 -1px 0 rgba(0,0,0,0.50) inset,
+    0 16px 48px rgba(0,0,0,0.65),
+    0 4px 16px rgba(0,0,0,0.40);
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+  transition: all 0.30s cubic-bezier(0.22,1,0.36,1);
 }
 
 .hub-card::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,200,100,0.08) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(255,200,80,0.06) 0%, transparent 55%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
 
 .hub-card-active:hover {
-  border-color: rgba(255,180,80,0.35);
+  border-color: rgba(255,180,80,0.30);
   box-shadow:
-    0 2px 0 rgba(255,220,120,0.12) inset,
-    0 -1px 0 rgba(0,0,0,0.40) inset,
-    0 20px 64px rgba(0,0,0,0.65),
-    0 4px 20px rgba(0,0,0,0.45),
-    0 0 0 1px rgba(255,160,40,0.20),
-    0 0 40px rgba(255,140,40,0.12);
+    0 2px 0 rgba(255,220,100,0.10) inset,
+    0 -1px 0 rgba(0,0,0,0.50) inset,
+    0 20px 56px rgba(0,0,0,0.70),
+    0 0 30px rgba(255,140,40,0.10);
   transform: translateY(-3px);
 }
-
 .hub-card-active:hover::before { opacity: 1; }
+.hub-card-inactive { opacity: 0.42; filter: grayscale(0.5); }
 
-.hub-card-inactive {
-  opacity: 0.5;
-  filter: grayscale(0.4);
+/* Specular top edge */
+.hub-card .hub-specular-top {
+  position: absolute; inset-x: 0; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,220,100,0.40), rgba(255,255,200,0.25), rgba(255,220,100,0.40), transparent);
+  border-radius: 24px 24px 0 0;
+}
+.hub-card .hub-specular-left {
+  position: absolute; inset-y: 0; left: 0; width: 1px;
+  background: linear-gradient(to bottom, rgba(255,200,80,0.25), rgba(255,255,255,0.08), transparent);
 }
 
-/* ── Photo frame inside card ── */
+/* ── Photo frame — uniform 16:9, cover, no distortion ── */
 .hub-photo-frame {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
   position: relative;
-  border: 1px solid rgba(255,200,100,0.15);
-  box-shadow:
-    0 4px 24px rgba(0,0,0,0.5),
-    0 0 0 1px rgba(255,255,255,0.05) inset;
+  border: 1px solid rgba(255,180,80,0.12);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  background: #0a0408; /* fallback while loading */
 }
-
 .hub-photo-frame img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
+  display: block;
   transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
 }
-
-.hub-card-active:hover .hub-photo-frame img {
-  transform: scale(1.05);
-}
-
-/* Glass overlay on photo */
+.hub-card-active:hover .hub-photo-frame img { transform: scale(1.04); }
 .hub-photo-frame::after {
   content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.05) 0%,
-    rgba(0,0,0,0.15) 100%
-  );
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.18) 100%);
   pointer-events: none;
 }
 
-/* Specular highlights */
-.hub-card .hub-specular-top {
-  position: absolute;
-  inset-x: 0;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,220,120,0.5), rgba(255,255,255,0.3), rgba(255,220,120,0.5), transparent);
-  border-radius: 24px 24px 0 0;
-}
-.hub-card .hub-specular-left {
-  position: absolute;
-  inset-y: 0;
-  left: 0;
-  width: 1px;
-  background: linear-gradient(to bottom, rgba(255,200,100,0.3), rgba(255,255,255,0.1), transparent);
-}
-
-/* Status badges */
+/* ── Status badges ── */
 .hub-badge-live {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(255,160,40,0.20);
-  border: 1px solid rgba(255,180,60,0.40);
-  color: rgba(255,210,120,0.95);
-  box-shadow: 0 0 10px rgba(255,140,30,0.25);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 999px;
+  background: rgba(255,160,40,0.18); border: 1px solid rgba(255,180,60,0.38);
+  color: rgba(255,210,120,0.95); box-shadow: 0 0 8px rgba(255,140,30,0.20);
 }
 .hub-badge-soon {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.10);
-  color: rgba(255,255,255,0.28);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 999px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.26);
 }
 .hub-badge-portal5 {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(180,80,220,0.20);
-  border: 1px solid rgba(200,100,240,0.35);
-  color: rgba(220,160,255,0.90);
-  box-shadow: 0 0 10px rgba(180,80,220,0.20);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 999px;
+  background: rgba(160,80,220,0.18); border: 1px solid rgba(190,100,240,0.30);
+  color: rgba(210,150,255,0.90); box-shadow: 0 0 8px rgba(160,80,220,0.18);
 }
 
-/* Arrow button */
+/* ── Arrow ── */
 .hub-arrow {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,200,100,0.20);
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,180,80,0.18);
   display: flex; align-items: center; justify-content: center;
-  color: rgba(255,200,100,0.85);
+  color: rgba(255,200,100,0.80);
   transition: transform 0.2s ease, background 0.2s ease;
 }
-.hub-card-active:hover .hub-arrow {
-  transform: translateX(3px);
-  background: rgba(255,160,40,0.18);
-}
+.hub-card-active:hover .hub-arrow { transform: translateX(3px); background: rgba(255,160,40,0.15); }
