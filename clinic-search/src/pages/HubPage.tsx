@@ -2,17 +2,22 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-// ── Occu-Med logo (uploaded) ──────────────────────────────────────────────────
 const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/2f069a7d6_occu-med-logo.png";
 
-// ── Portal card photos ────────────────────────────────────────────────────────
+// User-uploaded card photos — assigned by relevance
 const PHOTOS: Record<string, string> = {
-  "network-search":     "https://media.base44.com/images/public/69dc7fa90871ac017d7a1394/bdca09af9_generated_image.png",
-  "network-map":        "https://media.base44.com/images/public/69dc7fa90871ac017d7a1394/88c68d05a_generated_image.png",
-  "provider-directory": "https://media.base44.com/images/public/69dc7fa90871ac017d7a1394/16136a6a6_generated_image.png",
-  "report-generator":   "https://media.base44.com/images/public/69dc7fa90871ac017d7a1394/042e66b4e_generated_image.png",
-  "international-search":"https://media.base44.com/images/public/69dc7fa90871ac017d7a1394/c394a23a8_generated_image.png",
-  "pricing-transparency":"https://media.base44.com/images/public/69dc7fa90871ac017d7a1394/7e9610344_generated_image.png",
+  // Network Search → digital solutions / puzzle (golden tech)
+  "network-search": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/0313cde5c_b9b3175ca_Screenshot2026-04-21at123750PM.png",
+  // Network Map → isometric city / data (purple city)
+  "network-map": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/fb2849524_8995cbaf1_162dd2f7-bcd7-41ae-8335-035b4c4422c0.png",
+  // Provider Directory → health HUD / AI body
+  "provider-directory": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/2b0066947_9f95e6b1b_abstract-technology-ui-futuristic-concept-hud-interface-hologram-elements-of-digital-data-chart-communication-computing-human-body-digital-health-care-health-future-design-on-hi-tech-background-vector.jpg",
+  // Report Generator → data analytics isometric
+  "report-generator": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/19f6dc8d3_6f928f0e2_Screenshot2026-04-21at124130PM.png",
+  // International Search → globe / world network (gold globe)
+  "international-search": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/4c676b910_474e14c83_AI10.jpg",
+  // Pricing Transparency → connected minds / intelligence
+  "pricing-transparency": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/61346e24c_c0ed2378d_Screenshot2026-04-21at123149PM.png",
 };
 
 const INTL_URL = "https://international-search.onrender.com";
@@ -81,65 +86,72 @@ export default function HubPage() {
   };
 
   return (
-    <div className="hub-bg min-h-screen flex flex-col items-center px-6 py-16 relative overflow-hidden">
+    <div className="hub-bg min-h-screen flex flex-col items-center px-6 py-14 relative overflow-hidden">
 
-      {/* ── Sun rays layer ── */}
+      {/* ── Wide hazy sun rays ── */}
       <div className="hub-sunrays" aria-hidden="true">
-        {Array.from({ length: 11 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="hub-ray" />
         ))}
       </div>
 
-      {/* ── Horizon glow band ── */}
+      {/* ── Horizon glow ── */}
       <div className="hub-horizon" aria-hidden="true" />
 
       {/* ── Header ── */}
       <motion.div
-        initial={{ opacity: 0, y: -28 }}
+        initial={{ opacity: 0, y: -24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col items-center gap-6 mb-14 relative z-10"
+        transition={{ duration: 0.70, ease: [0.22, 1, 0.36, 1] }}
+        className="flex flex-col items-center gap-5 mb-12 relative z-10 w-full"
       >
-        {/* Logo pill */}
-        <div className="hub-logo-wrap px-8 py-5 rounded-2xl">
+        {/* Logo — white pill */}
+        <div className="hub-logo-wrap px-7 py-4">
           <img
             src={LOGO_URL}
             alt="Occu-Med"
-            className="h-16 w-auto object-contain"
+            className="h-14 w-auto object-contain"
+            style={{ display: "block" }}
           />
         </div>
 
-        {/* Title */}
-        <div className="text-center flex flex-col items-center gap-3">
-          <h1 className="hub-title text-6xl md:text-7xl font-bold tracking-tight leading-none">
+        {/* Title — generous sizing, overflow visible */}
+        <div className="text-center flex flex-col items-center gap-2" style={{ overflow: "visible" }}>
+          <h1
+            className="hub-title font-bold tracking-tight leading-tight"
+            style={{
+              fontSize: "clamp(2.8rem, 7vw, 5.5rem)",
+              overflow: "visible",
+              paddingBottom: "6px",
+            }}
+          >
             Network Management Hub
           </h1>
-          <p className="hub-subtitle text-base font-light tracking-[0.20em] uppercase mt-1">
+          <p className="hub-subtitle text-sm font-light tracking-[0.20em] uppercase">
             Occu-Med · Self-Pay Intelligence Platform
           </p>
         </div>
 
         {/* Divider */}
-        <div className="hub-divider w-40 mt-1" />
+        <div className="hub-divider w-36" />
       </motion.div>
 
       {/* ── Portal Grid ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full max-w-5xl relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-5xl relative z-10">
         {portals.map((portal, i) => (
           <motion.div
             key={portal.id}
-            initial={{ opacity: 0, y: 36, scale: 0.96 }}
+            initial={{ opacity: 0, y: 32, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.55, delay: 0.12 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.50, delay: 0.10 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
             onClick={() => handlePortalClick(portal)}
-            className={`hub-card rounded-2xl flex flex-col gap-0 p-0
+            className={`hub-card rounded-2xl flex flex-col
               ${portal.active ? "cursor-pointer hub-card-active" : "cursor-not-allowed hub-card-inactive"}`}
           >
-            {/* Specular edges */}
             <div className="hub-specular-top" />
             <div className="hub-specular-left" />
 
-            {/* Photo frame */}
+            {/* Photo frame — uniform 16:9, cover */}
             <div className="hub-photo-frame mx-3 mt-3">
               <img
                 src={PHOTOS[portal.id]}
@@ -148,22 +160,23 @@ export default function HubPage() {
               />
             </div>
 
-            {/* Text content */}
+            {/* Text */}
             <div className="flex flex-col gap-2 px-4 pt-3 pb-4">
               <div className="flex items-start justify-between gap-2">
                 <h2 className="text-sm font-semibold text-white/90 leading-snug tracking-tight">
                   {portal.label}
                 </h2>
                 {portal.active && (
-                  <ArrowRight className="w-3.5 h-3.5 text-amber-300/70 shrink-0 mt-0.5 transition-transform duration-200 group-hover:translate-x-1" />
+                  <div className="hub-arrow shrink-0 mt-0.5">
+                    <ArrowRight className="w-3 h-3" />
+                  </div>
                 )}
               </div>
 
-              <p className="text-xs text-white/45 leading-relaxed">
+              <p className="text-xs text-white/42 leading-relaxed">
                 {portal.description}
               </p>
 
-              {/* Status row */}
               <div className="flex items-center gap-2 mt-1">
                 {portal.active ? (
                   <>
@@ -181,12 +194,12 @@ export default function HubPage() {
         ))}
       </div>
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.3, duration: 0.8 }}
-        className="mt-20 text-[11px] text-white/18 tracking-[0.28em] uppercase relative z-10"
+        transition={{ delay: 1.2, duration: 0.8 }}
+        className="mt-16 text-[10px] text-white/15 tracking-[0.28em] uppercase relative z-10"
       >
         Occu-Med Network Management Hub © 2025
       </motion.p>
