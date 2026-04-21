@@ -14,101 +14,78 @@ import NavBar from "@/components/NavBar";
 import { useLocation } from "wouter";
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 30000,
-    },
-  },
+  defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
 });
 
 const FULL_BLEED_ROUTES = ["/network-map"];
 
-// Animated orb background used on all non-hub portal pages
-function PortalGlowBackground() {
+// ── Sunset glow background for inner portal pages ─────────────────────────────
+function PortalSunsetBackground() {
   return (
     <>
       <style>{`
-        @keyframes portal-orb1 {
+        @keyframes sunset-orb1 {
           0%   { transform: translate(0px, 0px) scale(1); }
-          25%  { transform: translate(55px, 70px) scale(1.10); }
-          50%  { transform: translate(15px, 130px) scale(0.91); }
-          75%  { transform: translate(-35px, 55px) scale(1.05); }
+          25%  { transform: translate(50px, 60px) scale(1.08); }
+          50%  { transform: translate(12px, 120px) scale(0.93); }
+          75%  { transform: translate(-30px, 50px) scale(1.04); }
           100% { transform: translate(0px, 0px) scale(1); }
         }
-        @keyframes portal-orb2 {
+        @keyframes sunset-orb2 {
           0%   { transform: translate(0px, 0px) scale(1); }
-          25%  { transform: translate(-75px, -55px) scale(1.14); }
-          50%  { transform: translate(-25px, -110px) scale(0.87); }
-          75%  { transform: translate(45px, -45px) scale(1.07); }
+          33%  { transform: translate(-60px, -50px) scale(1.12); }
+          66%  { transform: translate(40px, -90px) scale(0.88); }
           100% { transform: translate(0px, 0px) scale(1); }
         }
-        @keyframes portal-orb3 {
-          0%   { transform: translate(0px, 0px) scale(1); }
-          33%  { transform: translate(90px, -70px) scale(1.18); }
-          66%  { transform: translate(-55px, 55px) scale(0.85); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        @keyframes portal-pulse {
-          0%, 100% { opacity: 0.50; transform: scale(1); }
-          50%       { opacity: 0.80; transform: scale(1.15); }
+        @keyframes sunset-orb3 {
+          0%, 100% { opacity: 0.45; transform: scale(1); }
+          50%       { opacity: 0.75; transform: scale(1.12); }
         }
       `}</style>
-      <div style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 0,
-        pointerEvents: "none",
-        overflow: "hidden",
-      }}>
-        {/* Top-left primary orb */}
+      <div style={{ position:"fixed", inset:0, zIndex:0, pointerEvents:"none", overflow:"hidden" }}>
+        {/* Amber-orange top-left */}
         <div style={{
-          position:"absolute", top:"-8%", left:"-5%",
-          width:"560px", height:"560px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(56,189,248,0.52) 0%, rgba(56,189,248,0.22) 35%, transparent 70%)",
-          filter:"blur(38px)",
-          animation:"portal-orb1 21s ease-in-out infinite",
+          position:"absolute", top:"-6%", left:"-4%",
+          width:"580px", height:"580px", borderRadius:"50%",
+          background:"radial-gradient(circle at center, rgba(251,146,60,0.38) 0%, rgba(234,88,12,0.18) 35%, transparent 70%)",
+          filter:"blur(40px)",
+          animation:"sunset-orb1 22s ease-in-out infinite",
         }} />
-        {/* Bottom-right indigo-cyan orb */}
+        {/* Crimson-rose bottom-right */}
         <div style={{
-          position:"absolute", bottom:"-10%", right:"-5%",
-          width:"640px", height:"640px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(99,102,241,0.42) 0%, rgba(56,189,248,0.22) 40%, transparent 70%)",
-          filter:"blur(42px)",
-          animation:"portal-orb2 26s ease-in-out infinite",
-          animationDelay:"-10s",
+          position:"absolute", bottom:"-8%", right:"-4%",
+          width:"620px", height:"620px", borderRadius:"50%",
+          background:"radial-gradient(circle at center, rgba(185,28,28,0.32) 0%, rgba(159,18,57,0.18) 40%, transparent 70%)",
+          filter:"blur(44px)",
+          animation:"sunset-orb2 28s ease-in-out infinite",
+          animationDelay:"-12s",
         }} />
-        {/* Center cyan accent */}
+        {/* Deep purple center-right */}
         <div style={{
-          position:"absolute", top:"30%", left:"32%",
-          width:"420px", height:"420px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(0,200,230,0.38) 0%, rgba(56,189,248,0.16) 40%, transparent 70%)",
-          filter:"blur(34px)",
-          animation:"portal-orb3 16s ease-in-out infinite",
-          animationDelay:"-5s",
+          position:"absolute", top:"35%", right:"10%",
+          width:"380px", height:"380px", borderRadius:"50%",
+          background:"radial-gradient(circle at center, rgba(88,28,135,0.35) 0%, rgba(126,34,206,0.16) 40%, transparent 70%)",
+          filter:"blur(36px)",
+          animation:"sunset-orb3 14s ease-in-out infinite",
+          animationDelay:"-6s",
         }} />
-        {/* Top-right sparkle */}
+        {/* Warm gold top-right sparkle */}
         <div style={{
-          position:"absolute", top:"4%", right:"9%",
-          width:"250px", height:"250px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(147,210,255,0.65) 0%, rgba(56,189,248,0.30) 40%, transparent 70%)",
-          filter:"blur(22px)",
-          animation:"portal-pulse 8s ease-in-out infinite",
+          position:"absolute", top:"5%", right:"8%",
+          width:"240px", height:"240px", borderRadius:"50%",
+          background:"radial-gradient(circle at center, rgba(245,158,11,0.50) 0%, rgba(251,146,60,0.22) 40%, transparent 70%)",
+          filter:"blur(24px)",
+          animation:"sunset-orb3 10s ease-in-out infinite",
           animationDelay:"-3s",
         }} />
-        {/* Bottom-left fill */}
+        {/* Mauve bottom-left */}
         <div style={{
-          position:"absolute", bottom:"8%", left:"7%",
-          width:"320px", height:"320px",
-          borderRadius:"50%",
-          background:"radial-gradient(circle at center, rgba(59,130,246,0.45) 0%, rgba(96,165,250,0.20) 40%, transparent 70%)",
-          filter:"blur(28px)",
-          animation:"portal-pulse 13s ease-in-out infinite",
-          animationDelay:"-7s",
+          position:"absolute", bottom:"10%", left:"6%",
+          width:"300px", height:"300px", borderRadius:"50%",
+          background:"radial-gradient(circle at center, rgba(139,0,90,0.30) 0%, rgba(185,28,28,0.14) 40%, transparent 70%)",
+          filter:"blur(30px)",
+          animation:"sunset-orb3 16s ease-in-out infinite",
+          animationDelay:"-8s",
         }} />
       </div>
     </>
@@ -124,15 +101,15 @@ function Layout() {
     <div
       className="min-h-screen text-foreground flex flex-col"
       style={{
-        background: "#04091a",
+        background: "linear-gradient(160deg, #1a0800 0%, #2d1000 20%, #150510 60%, #0d0318 100%)",
         position: "relative",
         isolation: "isolate",
       }}
     >
-      {/* Animated glow background on all portal pages (not hub, which has its own) */}
-      {!isHub && !isFullBleed && <PortalGlowBackground />}
+      {/* Sunset glow on portal pages */}
+      {!isHub && !isFullBleed && <PortalSunsetBackground />}
 
-      {/* Navbar */}
+      {/* Navbar on portal pages */}
       {!isFullBleed && !isHub && <NavBar />}
 
       <main
