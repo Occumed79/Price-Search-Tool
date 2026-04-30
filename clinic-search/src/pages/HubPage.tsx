@@ -2,22 +2,22 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/2f069a7d6_occu-med-logo.png";
+// New neon Occu-Med logo
+const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/9f61bceea_ae0b250db_Logo1.png";
 
-// User-uploaded card photos — assigned by relevance
 const PHOTOS: Record<string, string> = {
-  // Network Search → digital solutions / puzzle (golden tech)
-  "network-search": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/0313cde5c_b9b3175ca_Screenshot2026-04-21at123750PM.png",
-  // Network Map → isometric city / data (purple city)
-  "network-map": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/fb2849524_8995cbaf1_162dd2f7-bcd7-41ae-8335-035b4c4422c0.png",
-  // Provider Directory → health HUD / AI body
-  "provider-directory": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/2b0066947_9f95e6b1b_abstract-technology-ui-futuristic-concept-hud-interface-hologram-elements-of-digital-data-chart-communication-computing-human-body-digital-health-care-health-future-design-on-hi-tech-background-vector.jpg",
-  // Report Generator → data analytics isometric
-  "report-generator": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/19f6dc8d3_6f928f0e2_Screenshot2026-04-21at124130PM.png",
-  // International Search → globe / world network (gold globe)
-  "international-search": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/4c676b910_474e14c83_AI10.jpg",
-  // Pricing Transparency → connected minds / intelligence
-  "pricing-transparency": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/61346e24c_c0ed2378d_Screenshot2026-04-21at123149PM.png",
+  "network-search":
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/6c9b11c76_910c3237a_NetworkSearch.png",
+  "network-map":
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/fbc899ab7_c78bb4e65_NetworkMap.png",
+  "provider-directory":
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/65a03b7ce_b4a80f16c_ProviderDirectory.png",
+  "report-generator":
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/18fde2278_f29c9beba_ReportGenerator.png",
+  "international-search":
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/eb3f1c593_1432b2a73_InternationalSearch.png",
+  "pricing-transparency":
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/ca3eec927_1bae87de8_PricingTransparencyDatabase-1.png",
 };
 
 const INTL_URL = "https://international-search.onrender.com";
@@ -88,14 +88,14 @@ export default function HubPage() {
   return (
     <div className="hub-bg min-h-screen flex flex-col items-center px-6 py-14 relative overflow-hidden">
 
-      {/* ── Wide hazy sun rays ── */}
+      {/* Wide hazy sun rays */}
       <div className="hub-sunrays" aria-hidden="true">
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="hub-ray" />
         ))}
       </div>
 
-      {/* ── Horizon glow ── */}
+      {/* Horizon glow */}
       <div className="hub-horizon" aria-hidden="true" />
 
       {/* ── Header ── */}
@@ -105,17 +105,17 @@ export default function HubPage() {
         transition={{ duration: 0.70, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-center gap-5 mb-12 relative z-10 w-full"
       >
-        {/* Logo — white pill */}
-        <div className="hub-logo-wrap px-7 py-4">
+        {/* Neon logo — dark pill so the glow pops */}
+        <div className="hub-logo-wrap px-6 py-3">
           <img
             src={LOGO_URL}
             alt="Occu-Med"
-            className="h-14 w-auto object-contain"
+            className="h-20 w-auto object-contain"
             style={{ display: "block" }}
           />
         </div>
 
-        {/* Title — generous sizing, overflow visible */}
+        {/* Title */}
         <div className="text-center flex flex-col items-center gap-2" style={{ overflow: "visible" }}>
           <h1
             className="hub-title font-bold tracking-tight leading-tight"
