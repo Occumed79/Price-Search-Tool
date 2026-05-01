@@ -19,12 +19,6 @@ const PHOTOS: Record<string, string> = {
     "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/db97fd71c_b8ed7b7e6_PricingTransparencyDatabase-1.png",
 };
 
-// Background glow colors per portal (for "coming soon" cards that need to feel alive)
-const GLOW: Record<string, string> = {
-  "provider-acquisition": "rgba(100, 180, 255, 0.10)",
-  "pricing-transparency":  "rgba(160, 100, 255, 0.10)",
-};
-
 const INTL_URL = "https://international-search.onrender.com";
 
 const portals = [
@@ -35,6 +29,7 @@ const portals = [
     href: "/search",
     external: false,
     active: true,
+    comingSoon: false,
   },
   {
     id: "network-map",
@@ -43,6 +38,7 @@ const portals = [
     href: "/network-map",
     external: false,
     active: true,
+    comingSoon: false,
   },
   {
     id: "provider-acquisition",
@@ -50,7 +46,8 @@ const portals = [
     description: "Browse and manage the full network of Occu-Med affiliated providers.",
     href: "#",
     external: false,
-    active: false,
+    active: true,
+    comingSoon: true,
   },
   {
     id: "report-generator",
@@ -59,6 +56,7 @@ const portals = [
     href: "/report",
     external: false,
     active: true,
+    comingSoon: false,
   },
   {
     id: "international-search",
@@ -67,6 +65,7 @@ const portals = [
     href: INTL_URL,
     external: true,
     active: true,
+    comingSoon: false,
   },
   {
     id: "pricing-transparency",
@@ -74,7 +73,8 @@ const portals = [
     description: "Access and compare self-pay and posted pricing data across the full provider network.",
     href: "#",
     external: false,
-    active: false,
+    active: true,
+    comingSoon: true,
   },
 ];
 
@@ -82,7 +82,7 @@ export default function HubPage() {
   const [, navigate] = useLocation();
 
   const handlePortalClick = (portal: typeof portals[0]) => {
-    if (!portal.active) return;
+    if (portal.comingSoon) return;
     if (portal.external) {
       window.open(portal.href, "_blank", "noopener noreferrer");
     } else {
@@ -107,26 +107,16 @@ export default function HubPage() {
         transition={{ duration: 0.70, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-center gap-5 mb-12 relative z-10 w-full"
       >
-        {/* Logo — large, no wrapper */}
         <img
           src={LOGO_URL}
           alt="Occu-Med"
-          style={{
-            height: "160px",
-            width: "auto",
-            objectFit: "contain",
-            display: "block",
-          }}
+          style={{ height: "160px", width: "auto", objectFit: "contain", display: "block" }}
         />
 
         <div className="text-center flex flex-col items-center gap-2" style={{ overflow: "visible" }}>
           <h1
             className="hub-title font-bold tracking-tight leading-tight"
-            style={{
-              fontSize: "clamp(2.8rem, 7vw, 5.5rem)",
-              overflow: "visible",
-              paddingBottom: "6px",
-            }}
+            style={{ fontSize: "clamp(2.8rem, 7vw, 5.5rem)", overflow: "visible", paddingBottom: "6px" }}
           >
             Network Management Hub
           </h1>
@@ -140,85 +130,79 @@ export default function HubPage() {
 
       {/* ── Portal Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-5xl relative z-10">
-        {portals.map((portal, i) => {
-          const glowColor = GLOW[portal.id];
-          return (
-            <motion.div
-              key={portal.id}
-              initial={{ opacity: 0, y: 32, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.50, delay: 0.10 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-              onClick={() => handlePortalClick(portal)}
-              className={`hub-card rounded-2xl flex flex-col
-                ${portal.active ? "cursor-pointer hub-card-active" : "cursor-not-allowed hub-card-inactive"}`}
-              style={glowColor ? {
-                boxShadow: `0 0 40px 8px ${glowColor}, 0 8px 32px rgba(0,0,0,0.55)`,
-                border: `1px solid ${glowColor.replace("0.10", "0.30")}`,
-              } : undefined}
+        {portals.map((portal, i) => (
+          <motion.div
+            key={portal.id}
+            initial={{ opacity: 0, y: 32, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.50, delay: 0.10 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+            onClick={() => handlePortalClick(portal)}
+            className={`hub-card rounded-2xl flex flex-col hub-card-active ${
+              portal.comingSoon ? "cursor-default" : "cursor-pointer"
+            }`}
+          >
+            <div className="hub-specular-top" />
+            <div className="hub-specular-left" />
+
+            {/* Photo — NO background, just the image itself filling the frame */}
+            <div
+              className="mx-3 mt-3 rounded-xl overflow-hidden"
+              style={{
+                width: "calc(100% - 1.5rem)",
+                aspectRatio: "16/9",
+                position: "relative",
+                background: "transparent",
+              }}
             >
-              <div className="hub-specular-top" />
-              <div className="hub-specular-left" />
-
-              {/* Photo frame — cover, no padding, fills the frame */}
-              <div
-                className="mx-3 mt-3 rounded-xl overflow-hidden"
+              <img
+                src={PHOTOS[portal.id]}
+                alt={portal.label}
+                loading="lazy"
                 style={{
-                  width: "calc(100% - 1.5rem)",
-                  aspectRatio: "16/9",
-                  position: "relative",
-                  background: "#08040e",
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center center",
+                  display: "block",
+                  borderRadius: "0.75rem",
                 }}
-              >
-                <img
-                  src={PHOTOS[portal.id]}
-                  alt={portal.label}
-                  loading="lazy"
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    objectPosition: "center center",
-                    display: "block",
-                    transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
-                  }}
-                />
+              />
+            </div>
+
+            {/* Text */}
+            <div className="flex flex-col gap-2 px-4 pt-3 pb-4">
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="text-sm font-semibold text-white/90 leading-snug tracking-tight">
+                  {portal.label}
+                </h2>
+                {!portal.comingSoon && (
+                  <div className="hub-arrow shrink-0 mt-0.5">
+                    <ArrowRight className="w-3 h-3" />
+                  </div>
+                )}
               </div>
 
-              {/* Text */}
-              <div className="flex flex-col gap-2 px-4 pt-3 pb-4">
-                <div className="flex items-start justify-between gap-2">
-                  <h2 className="text-sm font-semibold text-white/90 leading-snug tracking-tight">
-                    {portal.label}
-                  </h2>
-                  {portal.active && (
-                    <div className="hub-arrow shrink-0 mt-0.5">
-                      <ArrowRight className="w-3 h-3" />
-                    </div>
-                  )}
-                </div>
+              <p className="text-xs text-white/42 leading-relaxed">
+                {portal.description}
+              </p>
 
-                <p className="text-xs text-white/42 leading-relaxed">
-                  {portal.description}
-                </p>
-
-                <div className="flex items-center gap-2 mt-1">
-                  {portal.active ? (
-                    <>
-                      <span className="hub-badge-live">Live</span>
-                      {portal.external && (
-                        <span className="hub-badge-portal5">Portal 5</span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="hub-badge-soon">Coming Soon</span>
-                  )}
-                </div>
+              <div className="flex items-center gap-2 mt-1">
+                {portal.comingSoon ? (
+                  <span className="hub-badge-soon">Coming Soon</span>
+                ) : (
+                  <>
+                    <span className="hub-badge-live">Live</span>
+                    {portal.external && (
+                      <span className="hub-badge-portal5">Portal 5</span>
+                    )}
+                  </>
+                )}
               </div>
-            </motion.div>
-          );
-        })}
+            </div>
+          </motion.div>
+        ))}
       </div>
 
       <motion.p
