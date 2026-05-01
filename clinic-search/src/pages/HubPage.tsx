@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-// New neon Occu-Med logo
+// Neon Occu-Med logo — has its own built-in glowing frame, no wrapper needed
 const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/9f61bceea_ae0b250db_Logo1.png";
 
 const PHOTOS: Record<string, string> = {
@@ -105,15 +105,18 @@ export default function HubPage() {
         transition={{ duration: 0.70, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-center gap-5 mb-12 relative z-10 w-full"
       >
-        {/* Neon logo — dark pill so the glow pops */}
-        <div className="hub-logo-wrap px-6 py-3">
-          <img
-            src={LOGO_URL}
-            alt="Occu-Med"
-            className="h-20 w-auto object-contain"
-            style={{ display: "block" }}
-          />
-        </div>
+        {/* Logo — bare image, no wrapper pill/box */}
+        <img
+          src={LOGO_URL}
+          alt="Occu-Med"
+          style={{
+            height: "88px",
+            width: "auto",
+            objectFit: "contain",
+            display: "block",
+            filter: "drop-shadow(0 0 24px rgba(255,120,80,0.35))",
+          }}
+        />
 
         {/* Title */}
         <div className="text-center flex flex-col items-center gap-2" style={{ overflow: "visible" }}>
@@ -151,13 +154,39 @@ export default function HubPage() {
             <div className="hub-specular-top" />
             <div className="hub-specular-left" />
 
-            {/* Photo frame — uniform 16:9, cover */}
-            <div className="hub-photo-frame mx-3 mt-3">
+            {/* Photo frame — 16:9, fully centered cover */}
+            <div
+              className="mx-3 mt-3 rounded-xl overflow-hidden"
+              style={{
+                width: "calc(100% - 1.5rem)",
+                aspectRatio: "16/9",
+                position: "relative",
+                background: "#0a0408",
+                border: "1px solid rgba(255,180,80,0.12)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.55)",
+              }}
+            >
               <img
                 src={PHOTOS[portal.id]}
                 alt={portal.label}
                 loading="lazy"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center center",
+                  display: "block",
+                  transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
+                }}
               />
+              {/* Subtle bottom fade */}
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.20) 100%)",
+                pointerEvents: "none",
+              }} />
             </div>
 
             {/* Text */}
