@@ -28,7 +28,6 @@ const portals = [
     description: "Search posted prices across clinics, urgent care, labs, and more — anywhere in the country.",
     href: "/search",
     external: false,
-    active: true,
     comingSoon: false,
   },
   {
@@ -37,7 +36,6 @@ const portals = [
     description: "Visualize provider coverage and geographic distribution across all regions.",
     href: "/network-map",
     external: false,
-    active: true,
     comingSoon: false,
   },
   {
@@ -46,7 +44,6 @@ const portals = [
     description: "Browse and manage the full network of Occu-Med affiliated providers.",
     href: "#",
     external: false,
-    active: true,
     comingSoon: true,
   },
   {
@@ -55,7 +52,6 @@ const portals = [
     description: "Generate utilization, cost trend, and network performance reports on demand.",
     href: "/report",
     external: false,
-    active: true,
     comingSoon: false,
   },
   {
@@ -64,7 +60,6 @@ const portals = [
     description: "Extend your search globally — find providers and pricing across international networks.",
     href: INTL_URL,
     external: true,
-    active: true,
     comingSoon: false,
   },
   {
@@ -73,7 +68,6 @@ const portals = [
     description: "Access and compare self-pay and posted pricing data across the full provider network.",
     href: "#",
     external: false,
-    active: true,
     comingSoon: true,
   },
 ];
@@ -105,7 +99,7 @@ export default function HubPage() {
         initial={{ opacity: 0, y: -24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.70, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col items-center gap-5 mb-12 relative z-10 w-full"
+        className="flex flex-col items-center gap-4 mb-12 relative z-10 w-full"
       >
         <img
           src={LOGO_URL}
@@ -113,17 +107,12 @@ export default function HubPage() {
           style={{ height: "160px", width: "auto", objectFit: "contain", display: "block" }}
         />
 
-        <div className="text-center flex flex-col items-center gap-2" style={{ overflow: "visible" }}>
-          <h1
-            className="hub-title font-bold tracking-tight leading-tight"
-            style={{ fontSize: "clamp(2.8rem, 7vw, 5.5rem)", overflow: "visible", paddingBottom: "6px" }}
-          >
-            Network Management Hub
-          </h1>
-          <p className="hub-subtitle text-sm font-light tracking-[0.20em] uppercase">
-            Occu-Med · Self-Pay Intelligence Platform
-          </p>
-        </div>
+        <h1
+          className="hub-title font-bold tracking-tight leading-tight text-center"
+          style={{ fontSize: "clamp(2.8rem, 7vw, 5.5rem)", overflow: "visible", paddingBottom: "6px" }}
+        >
+          Network Management Hub
+        </h1>
 
         <div className="hub-divider w-36" />
       </motion.div>
@@ -137,21 +126,19 @@ export default function HubPage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.50, delay: 0.10 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
             onClick={() => handlePortalClick(portal)}
-            className={`hub-card rounded-2xl flex flex-col hub-card-active ${
+            className={`hub-card hub-card-active rounded-2xl flex flex-col ${
               portal.comingSoon ? "cursor-default" : "cursor-pointer"
             }`}
           >
             <div className="hub-specular-top" />
             <div className="hub-specular-left" />
 
-            {/* Photo — NO background, just the image itself filling the frame */}
+            {/* Photo frame — no bg, natural aspect ratio, full width */}
             <div
               className="mx-3 mt-3 rounded-xl overflow-hidden"
               style={{
                 width: "calc(100% - 1.5rem)",
-                aspectRatio: "16/9",
                 position: "relative",
-                background: "transparent",
               }}
             >
               <img
@@ -159,12 +146,8 @@ export default function HubPage() {
                 alt={portal.label}
                 loading="lazy"
                 style={{
-                  position: "absolute",
-                  inset: 0,
                   width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  objectPosition: "center center",
+                  height: "auto",
                   display: "block",
                   borderRadius: "0.75rem",
                 }}
