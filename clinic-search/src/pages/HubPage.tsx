@@ -2,34 +2,24 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-const LOGO_URL = "https://media.base44.com/images/public/69dcaa5f2cdb34ef76b60740/307ed9399_Logocopy.png";
+const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/9e200f82d_bf25943c4_Logo1.png";
 
 const PHOTOS: Record<string, string> = {
-  // compass/navigation dashboard
   "network-search":
-    "https://media.base44.com/images/public/69dcaa5f2cdb34ef76b60740/4c56e7c63_725370ea-8900-4051-a09b-baf05e5d806b.png",
-  // VR person holding globe
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/1a696dbca_479e6938f_NetworkSearch.png",
   "network-map":
-    "https://media.base44.com/images/public/69dcaa5f2cdb34ef76b60740/cd3786710_2af8b45c-7f6e-4598-a2bd-564566d4892f.png",
-  // puzzle pieces / partnership
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/2a5804fd0_NetworkMap_v2.png",
   "provider-acquisition":
-    "https://media.base44.com/images/public/69dcaa5f2cdb34ef76b60740/3c37bc98d_ebb08cf5-f915-465a-9abe-6a5fd91d249b.png",
-  // lightbulb knowledge hub
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/a32cc0ffa_37fb27498_ProviderDirectory.png",
   "report-generator":
-    "https://media.base44.com/images/public/69dcaa5f2cdb34ef76b60740/02588225c_783f5460-1289-4bbd-a0ac-a9316906a45e.png",
-  // AI globe + chip
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/5c9dc383b_463562641_ReportGenerator.png",
   "international-search":
-    "https://media.base44.com/images/public/69dcaa5f2cdb34ef76b60740/e2e3572a9_5ad3d8f9-d805-4fc2-8cb7-a8614edc9c0fcopy.png",
-  // lightbulb (reuse for coming soon)
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/90a765b4c_adeeac233_InternationalSearch.png",
   "pricing-transparency":
-    "https://media.base44.com/images/public/69dcaa5f2cdb34ef76b60740/02588225c_783f5460-1289-4bbd-a0ac-a9316906a45e.png",
-  // AI brain circuit — intelligence/insight
-  "insight-hub":
-    "https://media.base44.com/images/public/69dcaa5f2cdb34ef76b60740/0217324d6_e6551bb4-354c-4267-bcc8-3a654f7d911a.png",
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/db97fd71c_b8ed7b7e6_PricingTransparencyDatabase-1.png",
 };
 
 const INTL_URL = "https://international-search.onrender.com";
-const INSIGHT_HUB_URL = "https://insight-hub-eyza.onrender.com";
 
 const portals = [
   {
@@ -39,7 +29,6 @@ const portals = [
     href: "/search",
     external: false,
     comingSoon: false,
-    badge: "",
   },
   {
     id: "network-map",
@@ -48,7 +37,6 @@ const portals = [
     href: "/network-map",
     external: false,
     comingSoon: false,
-    badge: "",
   },
   {
     id: "provider-acquisition",
@@ -57,7 +45,6 @@ const portals = [
     href: "#",
     external: false,
     comingSoon: true,
-    badge: "",
   },
   {
     id: "report-generator",
@@ -66,7 +53,6 @@ const portals = [
     href: "/report",
     external: false,
     comingSoon: false,
-    badge: "",
   },
   {
     id: "international-search",
@@ -75,7 +61,6 @@ const portals = [
     href: INTL_URL,
     external: true,
     comingSoon: false,
-    badge: "portal5",
   },
   {
     id: "pricing-transparency",
@@ -84,16 +69,6 @@ const portals = [
     href: "#",
     external: false,
     comingSoon: true,
-    badge: "",
-  },
-  {
-    id: "insight-hub",
-    label: "Insight Hub",
-    description: "The strategic intelligence command center for Occu-Med — surfacing contracting opportunities, tracking client relationships, and mapping the competitive landscape.",
-    href: INSIGHT_HUB_URL,
-    external: true,
-    comingSoon: false,
-    badge: "portal6",
   },
 ];
 
@@ -129,7 +104,7 @@ export default function HubPage() {
         <img
           src={LOGO_URL}
           alt="Occu-Med"
-          style={{ height: "260px", width: "auto", objectFit: "contain", display: "block" }}
+          style={{ height: "160px", width: "auto", objectFit: "contain", display: "block" }}
         />
 
         <h1
@@ -158,16 +133,24 @@ export default function HubPage() {
             <div className="hub-specular-top" />
             <div className="hub-specular-left" />
 
-            {/* Photo frame */}
+            {/* Photo frame — no bg, natural aspect ratio, full width */}
             <div
               className="mx-3 mt-3 rounded-xl overflow-hidden"
-              style={{ width: "calc(100% - 1.5rem)", position: "relative" }}
+              style={{
+                width: "calc(100% - 1.5rem)",
+                position: "relative",
+              }}
             >
               <img
                 src={PHOTOS[portal.id]}
                 alt={portal.label}
                 loading="lazy"
-                style={{ width: "100%", height: "auto", display: "block", borderRadius: "0.75rem" }}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: "0.75rem",
+                }}
               />
             </div>
 
@@ -194,20 +177,8 @@ export default function HubPage() {
                 ) : (
                   <>
                     <span className="hub-badge-live">Live</span>
-                    {portal.badge === "portal5" && (
+                    {portal.external && (
                       <span className="hub-badge-portal5">Portal 5</span>
-                    )}
-                    {portal.badge === "portal6" && (
-                      <span
-                        className="hub-badge-portal5"
-                        style={{
-                          background: "rgba(120,80,255,0.18)",
-                          color: "#c084fc",
-                          borderColor: "rgba(192,132,252,0.35)",
-                        }}
-                      >
-                        Portal 6
-                      </span>
                     )}
                   </>
                 )}
@@ -228,3 +199,4 @@ export default function HubPage() {
     </div>
   );
 }
+
