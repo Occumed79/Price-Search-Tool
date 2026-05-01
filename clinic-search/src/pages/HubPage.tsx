@@ -2,22 +2,22 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-// Neon Occu-Med logo — has its own built-in glowing frame, no wrapper needed
-const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/9f61bceea_ae0b250db_Logo1.png";
+// Clean transparent-bg neon logo
+const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/9e200f82d_bf25943c4_Logo1.png";
 
 const PHOTOS: Record<string, string> = {
   "network-search":
-    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/6c9b11c76_910c3237a_NetworkSearch.png",
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/1a696dbca_479e6938f_NetworkSearch.png",
   "network-map":
-    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/fbc899ab7_c78bb4e65_NetworkMap.png",
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/a52d208ad_c412d182a_NetworkMap.png",
   "provider-directory":
-    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/65a03b7ce_b4a80f16c_ProviderDirectory.png",
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/a32cc0ffa_37fb27498_ProviderDirectory.png",
   "report-generator":
-    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/18fde2278_f29c9beba_ReportGenerator.png",
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/5c9dc383b_463562641_ReportGenerator.png",
   "international-search":
-    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/eb3f1c593_1432b2a73_InternationalSearch.png",
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/90a765b4c_adeeac233_InternationalSearch.png",
   "pricing-transparency":
-    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/ca3eec927_1bae87de8_PricingTransparencyDatabase-1.png",
+    "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/db97fd71c_b8ed7b7e6_PricingTransparencyDatabase-1.png",
 };
 
 const INTL_URL = "https://international-search.onrender.com";
@@ -105,16 +105,15 @@ export default function HubPage() {
         transition={{ duration: 0.70, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-center gap-5 mb-12 relative z-10 w-full"
       >
-        {/* Logo — bare image, no wrapper pill/box */}
+        {/* Logo — transparent bg, rendered bare */}
         <img
           src={LOGO_URL}
           alt="Occu-Med"
           style={{
-            height: "88px",
+            height: "96px",
             width: "auto",
             objectFit: "contain",
             display: "block",
-            filter: "drop-shadow(0 0 24px rgba(255,120,80,0.35))",
           }}
         />
 
@@ -154,16 +153,14 @@ export default function HubPage() {
             <div className="hub-specular-top" />
             <div className="hub-specular-left" />
 
-            {/* Photo frame — 16:9, fully centered cover */}
+            {/* Photo frame — transparent-bg PNGs, use contain so full art shows */}
             <div
-              className="mx-3 mt-3 rounded-xl overflow-hidden"
+              className="mx-3 mt-3 rounded-xl overflow-hidden flex items-center justify-center"
               style={{
                 width: "calc(100% - 1.5rem)",
                 aspectRatio: "16/9",
-                position: "relative",
-                background: "#0a0408",
-                border: "1px solid rgba(255,180,80,0.12)",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.55)",
+                background: "rgba(10,6,20,0.60)",
+                border: "1px solid rgba(255,180,80,0.10)",
               }}
             >
               <img
@@ -171,22 +168,15 @@ export default function HubPage() {
                 alt={portal.label}
                 loading="lazy"
                 style={{
-                  position: "absolute",
-                  inset: 0,
                   width: "100%",
                   height: "100%",
-                  objectFit: "cover",
+                  objectFit: "contain",
                   objectPosition: "center center",
                   display: "block",
+                  padding: "6px",
                   transition: "transform 0.4s cubic-bezier(0.22,1,0.36,1)",
                 }}
               />
-              {/* Subtle bottom fade */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.20) 100%)",
-                pointerEvents: "none",
-              }} />
             </div>
 
             {/* Text */}
