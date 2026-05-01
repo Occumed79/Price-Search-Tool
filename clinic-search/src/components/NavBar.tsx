@@ -1,8 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { Activity, Bookmark, Clock, Settings, ChevronLeft } from "lucide-react";
 
-// Updated to actual Occu-Med logo
-const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/2f069a7d6_occu-med-logo.png";
+// Neon Occu-Med logo — no filter inversion, rendered as-is
+const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/9f61bceea_ae0b250db_Logo1.png";
 
 const navItems = [
   { href: "/search",   label: "Search",   icon: Activity },
@@ -40,12 +40,16 @@ export default function NavBar() {
             </button>
           </Link>
           <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.10)" }} />
-          {/* Logo */}
+          {/* Neon logo — small in navbar, no wrapper, no filter */}
           <img
             src={LOGO_URL}
             alt="Occu-Med"
-            className="h-7 w-auto object-contain"
-            style={{ filter: "brightness(0) invert(1)", opacity: 0.75 }}
+            style={{
+              height: "32px",
+              width: "auto",
+              objectFit: "contain",
+              display: "block",
+            }}
           />
           <div>
             <span className="text-sm font-semibold tracking-tight" style={{ color: "rgba(255,255,255,0.90)" }}>
