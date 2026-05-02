@@ -20,6 +20,7 @@ const PHOTOS: Record<string, string> = {
 };
 
 const INTL_URL = "https://international-search.onrender.com";
+const FORMS_URL = "https://occu-med-forms-frontend.onrender.com";
 
 const portals = [
   {
@@ -42,9 +43,9 @@ const portals = [
     id: "provider-acquisition",
     label: "Provider Acquisition",
     description: "Browse and manage the full network of Occu-Med affiliated providers.",
-    href: "#",
-    external: false,
-    comingSoon: true,
+    href: FORMS_URL,
+    external: true,
+    comingSoon: false,
   },
   {
     id: "report-generator",
