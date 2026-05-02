@@ -10,45 +10,73 @@ export default function NetworkMapPage() {
   const [fullscreen, setFullscreen] = useState(false);
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", background: "#0a0a0f" }}>
       {/* Sub-toolbar */}
       {!fullscreen && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="glass-sidebar border-b border-white/[0.06] flex items-center justify-between px-4 h-11 shrink-0"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 16px",
+            height: "44px",
+            flexShrink: 0,
+            background: "rgba(255,255,255,0.03)",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            backdropFilter: "blur(12px)",
+          }}
         >
-          <div className="flex items-center gap-2">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/[0.05] transition-all text-xs font-medium"
+              style={{
+                display: "flex", alignItems: "center", gap: "4px",
+                padding: "4px 8px", borderRadius: "8px", border: "none",
+                background: "transparent", color: "rgba(255,255,255,0.4)",
+                cursor: "pointer", fontSize: "12px", fontWeight: 500,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft style={{ width: 14, height: 14 }} />
               Hub
             </button>
-            <div className="w-px h-4 bg-white/10" />
-            <span className="text-xs font-semibold text-white/70 tracking-tight">Network Map</span>
-            <span className="text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full ml-1">
-              LIVE
-            </span>
+            <div style={{ width: 1, height: 16, background: "rgba(255,255,255,0.1)" }} />
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Network Map</span>
+            <span style={{
+              fontSize: "10px", fontWeight: 500,
+              background: "rgba(16,185,129,0.15)", color: "#34d399",
+              border: "1px solid rgba(16,185,129,0.2)",
+              padding: "2px 6px", borderRadius: "9999px", marginLeft: 4,
+            }}>LIVE</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div style={{ display: "flex", gap: "4px" }}>
             <a
               href={MAP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-white/35 hover:text-white/60 hover:bg-white/[0.05] transition-all text-xs"
+              style={{
+                display: "flex", alignItems: "center", padding: "4px 8px",
+                borderRadius: "8px", color: "rgba(255,255,255,0.35)",
+                textDecoration: "none",
+              }}
               title="Open in new tab"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink style={{ width: 14, height: 14 }} />
             </a>
             <button
               onClick={() => setFullscreen(true)}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-white/35 hover:text-white/60 hover:bg-white/[0.05] transition-all text-xs"
+              style={{
+                display: "flex", alignItems: "center", padding: "4px 8px",
+                borderRadius: "8px", border: "none", background: "transparent",
+                color: "rgba(255,255,255,0.35)", cursor: "pointer",
+              }}
               title="Fullscreen"
             >
-              <Maximize2 className="w-3.5 h-3.5" />
+              <Maximize2 style={{ width: 14, height: 14 }} />
             </button>
           </div>
         </motion.div>
@@ -56,27 +84,35 @@ export default function NetworkMapPage() {
 
       {/* Fullscreen exit bar */}
       {fullscreen && (
-        <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-10 bg-black/60 backdrop-blur-sm">
-          <span className="text-xs text-white/50 font-medium">Network Map — Fullscreen</span>
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, zIndex: 50,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 16px", height: 40,
+          background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)",
+        }}>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>
+            Network Map — Fullscreen
+          </span>
           <button
             onClick={() => setFullscreen(false)}
-            className="text-xs text-white/50 hover:text-white/80 transition-colors px-2 py-1"
+            style={{
+              fontSize: 12, color: "rgba(255,255,255,0.5)", border: "none",
+              background: "transparent", cursor: "pointer", padding: "4px 8px",
+            }}
           >
             Exit Fullscreen
           </button>
         </div>
       )}
 
-      {/* iFrame */}
-      <div className={`flex-1 relative ${fullscreen ? "fixed inset-0 z-40" : ""}`}>
-        <iframe
-          src={MAP_URL}
-          title="Occu-Med Network Map"
-          className="w-full h-full border-0"
-          allow="geolocation; fullscreen"
-          loading="eager"
-        />
-      </div>
+      {/* iFrame — fills all remaining space */}
+      <iframe
+        src={MAP_URL}
+        title="Occu-Med Network Map"
+        style={{ flex: 1, border: "none", width: "100%", display: "block" }}
+        allow="geolocation; fullscreen"
+        loading="eager"
+      />
     </div>
   );
 }
