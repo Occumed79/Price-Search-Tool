@@ -51,7 +51,7 @@ export default function SearchesPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
               className="glass-card rounded-xl p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all cursor-pointer group"
-              onClick={() => navigate(`/?search=${search.id}`)}
+              onClick={() => navigate(`/search?search=${search.id}`)}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
