@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 const HUB_URL = (import.meta.env.VITE_HUB_URL as string | undefined) ?? "https://price-search-tool.onrender.com";
 
 // Neon logo — matches hub
-const LOGO_URL = "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/9e200f82d_bf25943c4_Logo1.png";
+const LOGO_URL = "https://base44.app/api/apps/69f08d58f2a02a258d395477/files/mp/public/69f08d58f2a02a258d395477/48fce840d_occu-med-new-logo.png";
 
 const PORTALS = [
   { id: 1, name: "Network Search",        subtitle: "US Self-Pay Search",     href: `${HUB_URL}/search`,      active: false },
