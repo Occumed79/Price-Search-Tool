@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Activity, Bookmark, Clock, Settings, ChevronLeft } from "lucide-react";
 
 // Clean transparent-bg neon logo
-const LOGO_URL = "https://base44.app/api/apps/69f08d58f2a02a258d395477/files/mp/public/69f08d58f2a02a258d395477/48fce840d_occu-med-new-logo.png";
+const LOGO_URL = "https://base44.app/api/apps/69f08d58f2a02a258d395477/files/mp/public/69f08d58f2a02a258d395477/ac708dd5f_logo-transparent.png";
 
 const navItems = [
   { href: "/search",   label: "Search",   icon: Activity },
