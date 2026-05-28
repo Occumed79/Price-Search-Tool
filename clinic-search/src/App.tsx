@@ -10,6 +10,7 @@ import SearchesPage from "@/pages/SearchesPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NetworkMapPage from "@/pages/NetworkMapPage";
 import ReportPage from "@/pages/ReportPage";
+import SharedToolsPage from "@/pages/SharedToolsPage";
 import NavBar from "@/components/NavBar";
 import { useLocation } from "wouter";
 
@@ -124,6 +125,7 @@ function Layout() {
           <Route path="/settings" component={SettingsPage} />
           <Route path="/network-map" component={NetworkMapPage} />
           <Route path="/report" component={ReportPage} />
+          <Route path="/shared-tools" component={SharedToolsPage} />
           <Route component={NotFound} />
         </Switch>
       </main>
