@@ -2,7 +2,8 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
-const LOGO_URL = "https://base44.app/api/apps/69f08d58f2a02a258d395477/files/mp/public/69f08d58f2a02a258d395477/ac708dd5f_logo-transparent.png";
+import occuMedLogo from "@/assets/occu-med-logo.png";
+const LOGO_URL = occuMedLogo;
 
 const PHOTOS: Record<string, string> = {
   "network-search":
