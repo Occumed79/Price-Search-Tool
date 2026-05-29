@@ -349,7 +349,7 @@ export default function ReportPage() {
       <div className="border-b border-white/[0.06] bg-black/20 sticky top-14 z-40">
         <div className="max-w-screen-xl mx-auto px-4 flex gap-1 py-2">
           {TABS.map(t=>{const A=activeTab===t.id;const I=t.icon;return(
-            <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${A?"text-xs font-semibold transition-all" style="background:rgba(0,229,255,0.14);color:rgba(0,229,255,0.95);border:1px solid rgba(0,229,255,0.28);borderRadius:12px;padding:8px 16px":"text-white/40 hover:text-white/70 hover:bg-white/[0.04]"}`}>
+            <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${A?"border":"text-white/40 hover:text-white/70 hover:bg-white/[0.04] border border-transparent"}`} style={A?{background:"rgba(0,229,255,0.14)",color:"rgba(0,229,255,0.95)",borderColor:"rgba(0,229,255,0.28)"}:{}}>
               <I className="w-3.5 h-3.5"/>{t.label}{t.id==="report"&&reportReady&&<span className="w-1.5 h-1.5 rounded-full bg-green-400"/>}
             </button>
           );})}
