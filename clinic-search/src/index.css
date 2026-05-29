@@ -292,13 +292,13 @@
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,
-    rgba(0, 229, 255, 0.55) 0%,
-    rgba(0, 188, 212, 0.35) 18%,
-    rgba(0, 150, 136, 0.18) 36%,
-    rgba(56, 142, 60,  0.09) 55%,
+    rgba(0, 229, 255, 0.72) 0%,
+    rgba(0, 188, 212, 0.48) 18%,
+    rgba(0, 150, 136, 0.25) 36%,
+    rgba(56, 142, 60,  0.12) 55%,
     transparent 72%
   );
-  filter: blur(40px);
+  filter: blur(28px);
   animation: orbPulse 9s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
@@ -347,15 +347,15 @@
   border-radius: 0 0 60% 60%;
 }
 
-.hub-ray:nth-child(1)  { --ray-op:0.06; width:280px; height:100vh; margin-left:-140px; background:linear-gradient(to bottom,rgba(0,229,255,0.8) 0%,rgba(0,188,212,0.25) 35%,transparent 70%); filter:blur(60px); transform:rotate(-52deg); animation:rayHaze 13s 0s ease-in-out infinite; }
-.hub-ray:nth-child(2)  { --ray-op:0.09; width:340px; height:100vh; margin-left:-170px; background:linear-gradient(to bottom,rgba(0,212,200,0.8) 0%,rgba(0,188,212,0.25) 35%,transparent 65%); filter:blur(70px); transform:rotate(-35deg); animation:rayHaze 16s 2s ease-in-out infinite; }
-.hub-ray:nth-child(3)  { --ray-op:0.12; width:420px; height:100vh; margin-left:-210px; background:linear-gradient(to bottom,rgba(0,229,255,1.0) 0%,rgba(0,200,180,0.35) 30%,transparent 62%); filter:blur(75px); transform:rotate(-18deg); animation:rayHaze 10s 1s ease-in-out infinite; }
-.hub-ray:nth-child(4)  { --ray-op:0.15; width:520px; height:110vh; margin-left:-260px; background:linear-gradient(to bottom,rgba(100,255,240,1.0) 0%,rgba(0,229,255,0.45) 25%,rgba(0,188,212,0.18) 55%,transparent 70%); filter:blur(85px); transform:rotate(-6deg); animation:rayHaze 12s 0.5s ease-in-out infinite; }
-.hub-ray:nth-child(5)  { --ray-op:0.18; width:580px; height:115vh; margin-left:-290px; background:linear-gradient(to bottom,rgba(160,255,250,1.0) 0%,rgba(0,229,255,0.50) 22%,rgba(0,188,212,0.20) 52%,transparent 68%); filter:blur(95px); transform:rotate(0deg); animation:rayHaze 14s 1.5s ease-in-out infinite; }
-.hub-ray:nth-child(6)  { --ray-op:0.15; width:520px; height:110vh; margin-left:-260px; background:linear-gradient(to bottom,rgba(100,255,240,1.0) 0%,rgba(0,229,255,0.45) 25%,rgba(0,188,212,0.18) 55%,transparent 70%); filter:blur(85px); transform:rotate(6deg); animation:rayHaze 12s 3s ease-in-out infinite; }
-.hub-ray:nth-child(7)  { --ray-op:0.12; width:420px; height:100vh; margin-left:-210px; background:linear-gradient(to bottom,rgba(0,229,255,1.0) 0%,rgba(0,200,180,0.35) 30%,transparent 62%); filter:blur(75px); transform:rotate(18deg); animation:rayHaze 10s 2.5s ease-in-out infinite; }
-.hub-ray:nth-child(8)  { --ray-op:0.09; width:340px; height:100vh; margin-left:-170px; background:linear-gradient(to bottom,rgba(0,212,200,0.8) 0%,rgba(0,188,212,0.25) 35%,transparent 65%); filter:blur(70px); transform:rotate(35deg); animation:rayHaze 16s 4s ease-in-out infinite; }
-.hub-ray:nth-child(9)  { --ray-op:0.06; width:280px; height:100vh; margin-left:-140px; background:linear-gradient(to bottom,rgba(0,229,255,0.8) 0%,rgba(0,188,212,0.25) 30%,transparent 70%); filter:blur(60px); transform:rotate(52deg); animation:rayHaze 13s 1s ease-in-out infinite; }
+.hub-ray:nth-child(1)  { --ray-op:0.14; width:280px; height:100vh; margin-left:-140px; background:linear-gradient(to bottom,rgba(0,229,255,0.8) 0%,rgba(0,188,212,0.25) 35%,transparent 70%); filter:blur(60px); transform:rotate(-52deg); animation:rayHaze 13s 0s ease-in-out infinite; }
+.hub-ray:nth-child(2)  { --ray-op:0.20; width:340px; height:100vh; margin-left:-170px; background:linear-gradient(to bottom,rgba(0,212,200,0.8) 0%,rgba(0,188,212,0.25) 35%,transparent 65%); filter:blur(70px); transform:rotate(-35deg); animation:rayHaze 16s 2s ease-in-out infinite; }
+.hub-ray:nth-child(3)  { --ray-op:0.28; width:420px; height:100vh; margin-left:-210px; background:linear-gradient(to bottom,rgba(0,229,255,1.0) 0%,rgba(0,200,180,0.35) 30%,transparent 62%); filter:blur(75px); transform:rotate(-18deg); animation:rayHaze 10s 1s ease-in-out infinite; }
+.hub-ray:nth-child(4)  { --ray-op:0.34; width:520px; height:110vh; margin-left:-260px; background:linear-gradient(to bottom,rgba(100,255,240,1.0) 0%,rgba(0,229,255,0.45) 25%,rgba(0,188,212,0.18) 55%,transparent 70%); filter:blur(85px); transform:rotate(-6deg); animation:rayHaze 12s 0.5s ease-in-out infinite; }
+.hub-ray:nth-child(5)  { --ray-op:0.40; width:580px; height:115vh; margin-left:-290px; background:linear-gradient(to bottom,rgba(160,255,250,1.0) 0%,rgba(0,229,255,0.50) 22%,rgba(0,188,212,0.20) 52%,transparent 68%); filter:blur(95px); transform:rotate(0deg); animation:rayHaze 14s 1.5s ease-in-out infinite; }
+.hub-ray:nth-child(6)  { --ray-op:0.34; width:520px; height:110vh; margin-left:-260px; background:linear-gradient(to bottom,rgba(100,255,240,1.0) 0%,rgba(0,229,255,0.45) 25%,rgba(0,188,212,0.18) 55%,transparent 70%); filter:blur(85px); transform:rotate(6deg); animation:rayHaze 12s 3s ease-in-out infinite; }
+.hub-ray:nth-child(7)  { --ray-op:0.28; width:420px; height:100vh; margin-left:-210px; background:linear-gradient(to bottom,rgba(0,229,255,1.0) 0%,rgba(0,200,180,0.35) 30%,transparent 62%); filter:blur(75px); transform:rotate(18deg); animation:rayHaze 10s 2.5s ease-in-out infinite; }
+.hub-ray:nth-child(8)  { --ray-op:0.20; width:340px; height:100vh; margin-left:-170px; background:linear-gradient(to bottom,rgba(0,212,200,0.8) 0%,rgba(0,188,212,0.25) 35%,transparent 65%); filter:blur(70px); transform:rotate(35deg); animation:rayHaze 16s 4s ease-in-out infinite; }
+.hub-ray:nth-child(9)  { --ray-op:0.14; width:280px; height:100vh; margin-left:-140px; background:linear-gradient(to bottom,rgba(0,229,255,0.8) 0%,rgba(0,188,212,0.25) 30%,transparent 70%); filter:blur(60px); transform:rotate(52deg); animation:rayHaze 13s 1s ease-in-out infinite; }
 
 /* ── Horizon color band ── */
 .hub-horizon {
