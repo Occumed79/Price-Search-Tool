@@ -319,10 +319,10 @@ export default function ReportPage() {
   return (
     <div className="atmo-bg min-h-screen flex flex-col">
       {/* ── Header ── */}
-      <header className="glass-sidebar border-b border-white/[0.06] sticky top-0 z-50">
+      <header style={{ background:"rgba(2,14,24,0.88)", backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)", borderBottom:"1px solid rgba(0,229,255,0.14)", boxShadow:"0 1px 0 rgba(0,229,255,0.06), 0 4px 24px rgba(0,0,0,0.5)", position:"sticky", top:0, zIndex:50 }}>
         <div className="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={()=>navigate("/")} className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/[0.05] transition-all text-xs font-medium"><ChevronLeft className="w-3.5 h-3.5"/>Hub</button>
+            <button onClick={()=>navigate("/")} style={{ display:"flex", alignItems:"center", gap:"4px", padding:"4px 10px", borderRadius:"8px", background:"rgba(0,229,255,0.06)", border:"1px solid rgba(0,229,255,0.14)", color:"rgba(0,229,255,0.60)", cursor:"pointer", fontSize:"12px", fontWeight:500 }} className="transition-all text-xs font-medium"><ChevronLeft className="w-3.5 h-3.5"/>Hub</button>
             <div className="w-px h-4 bg-white/10"/>
             <span className="text-sm font-semibold text-white/90">Provider Search Intelligence Report</span>
           </div>
@@ -330,7 +330,11 @@ export default function ReportPage() {
             {intel&&<div className="flex items-center gap-1 text-[10px] text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full"><Wifi className="w-2.5 h-2.5"/>{intel.sources.filter(s=>s.status.startsWith("✅")).length}/{intel.sources.length} live</div>}
             <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full border ${PC[req.priority]}`}>{req.priority}</span>
             <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full border ${SC[req.searchStatus]}`}>{req.searchStatus.replace("_"," ")}</span>
-            <button onClick={generate} disabled={loading} className="generate-btn flex items-center gap-2">
+            <button onClick={generate} disabled={loading} style={{ display:"flex", alignItems:"center", gap:"8px", padding:"7px 16px", borderRadius:"10px",
+                        background:"linear-gradient(135deg,rgba(0,188,212,0.30),rgba(0,150,136,0.25))",
+                        border:"1px solid rgba(0,229,255,0.40)", color:"rgba(0,229,255,0.95)",
+                        cursor:"pointer", fontSize:"12px", fontWeight:600,
+                        boxShadow:"0 0 20px rgba(0,229,255,0.18)" }}>
               {loading
                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin text-sky-300"/>
                     <span className="text-sky-200">Fetching Intel…</span></>
@@ -345,7 +349,7 @@ export default function ReportPage() {
       <div className="border-b border-white/[0.06] bg-black/20 sticky top-14 z-40">
         <div className="max-w-screen-xl mx-auto px-4 flex gap-1 py-2">
           {TABS.map(t=>{const A=activeTab===t.id;const I=t.icon;return(
-            <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${A?"bg-sky-500/15 text-sky-300 border border-sky-500/25":"text-white/40 hover:text-white/70 hover:bg-white/[0.04]"}`}>
+            <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${A?"text-xs font-semibold transition-all" style="background:rgba(0,229,255,0.14);color:rgba(0,229,255,0.95);border:1px solid rgba(0,229,255,0.28);borderRadius:12px;padding:8px 16px":"text-white/40 hover:text-white/70 hover:bg-white/[0.04]"}`}>
               <I className="w-3.5 h-3.5"/>{t.label}{t.id==="report"&&reportReady&&<span className="w-1.5 h-1.5 rounded-full bg-green-400"/>}
             </button>
           );})}
