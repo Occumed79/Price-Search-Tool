@@ -4,9 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ExternalLink, Link2, X, Check } from "lucide-react";
 
 import occuMedLogo from "@/assets/occu-med-logo.png";
-import labSupplyImg from "@/assets/lab-supply-orders.png";
-import prospectiveProvidersImg from "@/assets/prospective-providers.png";
-import sharedToolsImg from "@/assets/shared-tools.png";
+import imgNetworkSearch from "@/assets/portal-network-search.png";
+import imgNetworkMap from "@/assets/portal-network-map.png";
+import imgProviderAcq from "@/assets/portal-provider-acquisition.png";
+import imgReportGen from "@/assets/portal-report-generator.png";
+import imgIntlSearch from "@/assets/portal-international-search.png";
+import imgPricingTransp from "@/assets/portal-pricing-transparency.png";
+import imgLabSupply from "@/assets/portal-lab-supply-orders.png";
+import imgProspectiveProv from "@/assets/portal-prospective-providers.png";
+import imgSharedTools from "@/assets/portal-shared-tools.png";
 
 const LOGO_URL = occuMedLogo;
 
@@ -21,12 +27,12 @@ function saveLinks(links: Record<string, string>) {
 
 // ── Static photos for original 6 portals ─────────────────────────────────────
 const PHOTOS: Record<string, string> = {
-  "network-search": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/1a696dbca_479e6938f_NetworkSearch.png",
-  "network-map": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/2a5804fd0_NetworkMap_v2.png",
-  "provider-acquisition": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/a32cc0ffa_37fb27498_ProviderDirectory.png",
-  "report-generator": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/5c9dc383b_463562641_ReportGenerator.png",
-  "international-search": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/90a765b4c_adeeac233_InternationalSearch.png",
-  "pricing-transparency": "https://base44.app/api/apps/69dc7fa90871ac017d7a1394/files/mp/public/69dc7fa90871ac017d7a1394/db97fd71c_b8ed7b7e6_PricingTransparencyDatabase-1.png",
+  "network-search": imgNetworkSearch,
+  "network-map": imgNetworkMap,
+  "provider-acquisition": imgProviderAcq,
+  "report-generator": imgReportGen,
+  "international-search": imgIntlSearch,
+  "pricing-transparency": imgPricingTransp,
 };
 
 const INTL_URL = "https://international-search.onrender.com";
@@ -55,9 +61,9 @@ const STATIC_PORTALS: Portal[] = [
 ];
 
 const EXTRA_PORTALS: Portal[] = [
-  { id: "lab-supply-orders", label: "Lab Supply Orders", description: "Manage and track lab supply procurement — orders, vendors, and fulfillment status.", customImg: labSupplyImg, linkable: true },
-  { id: "prospective-providers", label: "Prospective Providers Portal", description: "Evaluate and onboard new providers — pipeline tracking, credentialing, and outreach.", customImg: prospectiveProvidersImg, linkable: true },
-  { id: "shared-tools", label: "Shared Tools", description: "Centralized workspace for shared utilities, storage portals, and cross-team tools.", customImg: sharedToolsImg, isSharedTools: true },
+  { id: "lab-supply-orders", label: "Lab Supply Orders", description: "Manage and track lab supply procurement — orders, vendors, and fulfillment status.", customImg: imgLabSupply, linkable: true },
+  { id: "prospective-providers", label: "Prospective Providers Portal", description: "Evaluate and onboard new providers — pipeline tracking, credentialing, and outreach.", customImg: imgProspectiveProv, linkable: true },
+  { id: "shared-tools", label: "Shared Tools", description: "Centralized workspace for shared utilities, storage portals, and cross-team tools.", customImg: imgSharedTools, isSharedTools: true },
 ];
 
 // ── Link pip button ───────────────────────────────────────────────────────────
@@ -171,20 +177,22 @@ export default function HubPage() {
       </div>
       <div className="hub-horizon" aria-hidden="true" />
 
-      {/* Floating orbs */}
+      {/* Floating orbs — high visibility */}
       <div className="hub-orbs" aria-hidden="true">
-        {/* Cyan orb — top left */}
-        <div style={{ position:"absolute", top:"8%", left:"6%", width:"380px", height:"380px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,229,255,0.50) 0%, rgba(0,188,212,0.25) 40%, transparent 70%)", filter:"blur(35px)", animation:"orbDrift1 26s ease-in-out infinite", pointerEvents:"none" }} />
-        {/* Teal orb — bottom right */}
-        <div style={{ position:"absolute", bottom:"10%", right:"5%", width:"440px", height:"440px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,150,136,0.48) 0%, rgba(38,166,154,0.24) 42%, transparent 72%)", filter:"blur(38px)", animation:"orbDrift2 32s ease-in-out infinite", pointerEvents:"none" }} />
-        {/* Green orb — mid left */}
-        <div style={{ position:"absolute", top:"45%", left:"2%", width:"280px", height:"280px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(102,187,106,0.40) 0%, rgba(56,142,60,0.20) 45%, transparent 72%)", filter:"blur(28px)", animation:"orbDrift3 18s ease-in-out infinite", pointerEvents:"none" }} />
-        {/* Bright cyan — top right */}
-        <div style={{ position:"absolute", top:"4%", right:"8%", width:"240px", height:"240px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,229,255,0.65) 0%, rgba(0,212,220,0.32) 38%, transparent 68%)", filter:"blur(24px)", animation:"orbPulse 11s ease-in-out infinite", animationDelay:"-4s", pointerEvents:"none" }} />
-        {/* Seafoam orb — bottom left */}
-        <div style={{ position:"absolute", bottom:"5%", left:"10%", width:"320px", height:"320px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(38,166,154,0.38) 0%, rgba(0,188,212,0.20) 42%, transparent 70%)", filter:"blur(30px)", animation:"orbDrift1 22s ease-in-out infinite", animationDelay:"-10s", pointerEvents:"none" }} />
-        {/* Deep teal center glow */}
-        <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translateX(-50%)", width:"600px", height:"300px", borderRadius:"50%", background:"radial-gradient(ellipse at center, rgba(0,188,212,0.28) 0%, rgba(0,150,136,0.14) 45%, transparent 70%)", filter:"blur(42px)", animation:"orbPulse 14s ease-in-out infinite", animationDelay:"-7s", pointerEvents:"none" }} />
+        {/* Blazing cyan — top left */}
+        <div style={{ position:"absolute", top:"6%", left:"4%", width:"500px", height:"500px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,229,255,0.75) 0%, rgba(0,188,212,0.40) 30%, rgba(0,150,136,0.15) 60%, transparent 75%)", filter:"blur(22px)", animation:"orbDrift1 26s ease-in-out infinite", pointerEvents:"none" }} />
+        {/* Teal — bottom right */}
+        <div style={{ position:"absolute", bottom:"8%", right:"3%", width:"560px", height:"560px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,188,212,0.70) 0%, rgba(38,166,154,0.35) 32%, rgba(0,150,136,0.15) 60%, transparent 75%)", filter:"blur(24px)", animation:"orbDrift2 32s ease-in-out infinite", pointerEvents:"none" }} />
+        {/* Green — mid left */}
+        <div style={{ position:"absolute", top:"42%", left:"1%", width:"360px", height:"360px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(102,187,106,0.65) 0%, rgba(56,142,60,0.35) 38%, transparent 70%)", filter:"blur(18px)", animation:"orbDrift3 18s ease-in-out infinite", pointerEvents:"none" }} />
+        {/* Pure cyan — top right */}
+        <div style={{ position:"absolute", top:"3%", right:"6%", width:"320px", height:"320px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,229,255,0.85) 0%, rgba(0,212,220,0.45) 35%, transparent 68%)", filter:"blur(16px)", animation:"orbPulse 11s ease-in-out infinite", animationDelay:"-4s", pointerEvents:"none" }} />
+        {/* Seafoam — bottom left */}
+        <div style={{ position:"absolute", bottom:"4%", left:"8%", width:"420px", height:"420px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(38,166,154,0.65) 0%, rgba(0,188,212,0.32) 38%, transparent 70%)", filter:"blur(20px)", animation:"orbDrift1 22s ease-in-out infinite", animationDelay:"-10s", pointerEvents:"none" }} />
+        {/* Center glow — wide ambient */}
+        <div style={{ position:"absolute", top:"20%", left:"50%", transform:"translateX(-50%)", width:"800px", height:"400px", borderRadius:"50%", background:"radial-gradient(ellipse at center, rgba(0,188,212,0.45) 0%, rgba(0,150,136,0.22) 40%, transparent 68%)", filter:"blur(30px)", animation:"orbPulse 14s ease-in-out infinite", animationDelay:"-7s", pointerEvents:"none" }} />
+        {/* Mid-right green accent */}
+        <div style={{ position:"absolute", top:"55%", right:"2%", width:"280px", height:"280px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(124,179,66,0.60) 0%, rgba(102,187,106,0.28) 42%, transparent 70%)", filter:"blur(18px)", animation:"orbDrift3 20s ease-in-out infinite", animationDelay:"-5s", pointerEvents:"none" }} />
       </div>
 
       {/* Header */}
@@ -193,7 +201,7 @@ export default function HubPage() {
         transition={{ duration: 0.70, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-center gap-4 mb-12 relative z-10 w-full"
       >
-        <img src={LOGO_URL} alt="Occu-Med" style={{ height: "260px", width: "auto", objectFit: "contain", display: "block", filter: "drop-shadow(0 0 40px rgba(0,229,255,0.55)) drop-shadow(0 0 80px rgba(0,188,212,0.30))" }} />
+        <img src={LOGO_URL} alt="Occu-Med" style={{ height: "300px", width: "auto", objectFit: "contain", display: "block", filter: "drop-shadow(0 0 50px rgba(0,229,255,0.70)) drop-shadow(0 0 100px rgba(0,188,212,0.45)) drop-shadow(0 0 160px rgba(0,150,136,0.20))" }} />
         <h1 className="hub-title font-bold tracking-tight leading-tight text-center"
           style={{ fontSize: "clamp(2.8rem, 7vw, 5.5rem)", overflow: "visible", paddingBottom: "6px" }}>
           Network Management Hub
