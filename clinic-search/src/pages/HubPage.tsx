@@ -174,17 +174,17 @@ export default function HubPage() {
       {/* Floating orbs */}
       <div className="hub-orbs" aria-hidden="true">
         {/* Cyan orb — top left */}
-        <div style={{ position:"absolute", top:"8%", left:"6%", width:"380px", height:"380px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,229,255,0.22) 0%, rgba(0,188,212,0.10) 40%, transparent 70%)", filter:"blur(48px)", animation:"orbDrift1 26s ease-in-out infinite", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", top:"8%", left:"6%", width:"380px", height:"380px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,229,255,0.50) 0%, rgba(0,188,212,0.25) 40%, transparent 70%)", filter:"blur(35px)", animation:"orbDrift1 26s ease-in-out infinite", pointerEvents:"none" }} />
         {/* Teal orb — bottom right */}
-        <div style={{ position:"absolute", bottom:"10%", right:"5%", width:"440px", height:"440px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,150,136,0.20) 0%, rgba(38,166,154,0.10) 42%, transparent 72%)", filter:"blur(52px)", animation:"orbDrift2 32s ease-in-out infinite", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", bottom:"10%", right:"5%", width:"440px", height:"440px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,150,136,0.48) 0%, rgba(38,166,154,0.24) 42%, transparent 72%)", filter:"blur(38px)", animation:"orbDrift2 32s ease-in-out infinite", pointerEvents:"none" }} />
         {/* Green orb — mid left */}
-        <div style={{ position:"absolute", top:"45%", left:"2%", width:"280px", height:"280px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(102,187,106,0.18) 0%, rgba(56,142,60,0.08) 45%, transparent 72%)", filter:"blur(40px)", animation:"orbDrift3 18s ease-in-out infinite", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", top:"45%", left:"2%", width:"280px", height:"280px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(102,187,106,0.40) 0%, rgba(56,142,60,0.20) 45%, transparent 72%)", filter:"blur(28px)", animation:"orbDrift3 18s ease-in-out infinite", pointerEvents:"none" }} />
         {/* Bright cyan — top right */}
-        <div style={{ position:"absolute", top:"4%", right:"8%", width:"240px", height:"240px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,229,255,0.30) 0%, rgba(0,212,220,0.14) 38%, transparent 68%)", filter:"blur(36px)", animation:"orbPulse 11s ease-in-out infinite", animationDelay:"-4s", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", top:"4%", right:"8%", width:"240px", height:"240px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(0,229,255,0.65) 0%, rgba(0,212,220,0.32) 38%, transparent 68%)", filter:"blur(24px)", animation:"orbPulse 11s ease-in-out infinite", animationDelay:"-4s", pointerEvents:"none" }} />
         {/* Seafoam orb — bottom left */}
-        <div style={{ position:"absolute", bottom:"5%", left:"10%", width:"320px", height:"320px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(38,166,154,0.16) 0%, rgba(0,188,212,0.08) 42%, transparent 70%)", filter:"blur(44px)", animation:"orbDrift1 22s ease-in-out infinite", animationDelay:"-10s", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", bottom:"5%", left:"10%", width:"320px", height:"320px", borderRadius:"50%", background:"radial-gradient(circle at center, rgba(38,166,154,0.38) 0%, rgba(0,188,212,0.20) 42%, transparent 70%)", filter:"blur(30px)", animation:"orbDrift1 22s ease-in-out infinite", animationDelay:"-10s", pointerEvents:"none" }} />
         {/* Deep teal center glow */}
-        <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translateX(-50%)", width:"600px", height:"300px", borderRadius:"50%", background:"radial-gradient(ellipse at center, rgba(0,188,212,0.12) 0%, rgba(0,150,136,0.06) 45%, transparent 70%)", filter:"blur(60px)", animation:"orbPulse 14s ease-in-out infinite", animationDelay:"-7s", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translateX(-50%)", width:"600px", height:"300px", borderRadius:"50%", background:"radial-gradient(ellipse at center, rgba(0,188,212,0.28) 0%, rgba(0,150,136,0.14) 45%, transparent 70%)", filter:"blur(42px)", animation:"orbPulse 14s ease-in-out infinite", animationDelay:"-7s", pointerEvents:"none" }} />
       </div>
 
       {/* Header */}
@@ -193,7 +193,7 @@ export default function HubPage() {
         transition={{ duration: 0.70, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-center gap-4 mb-12 relative z-10 w-full"
       >
-        <img src={LOGO_URL} alt="Occu-Med" style={{ height: "220px", width: "auto", objectFit: "contain", display: "block", filter: "drop-shadow(0 0 30px rgba(0,229,255,0.40))" }} />
+        <img src={LOGO_URL} alt="Occu-Med" style={{ height: "260px", width: "auto", objectFit: "contain", display: "block", filter: "drop-shadow(0 0 40px rgba(0,229,255,0.55)) drop-shadow(0 0 80px rgba(0,188,212,0.30))" }} />
         <h1 className="hub-title font-bold tracking-tight leading-tight text-center"
           style={{ fontSize: "clamp(2.8rem, 7vw, 5.5rem)", overflow: "visible", paddingBottom: "6px" }}>
           Network Management Hub
