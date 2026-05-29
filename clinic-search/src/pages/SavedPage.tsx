@@ -383,14 +383,49 @@ export default function SavedPage() {
         backdropFilter: "blur(24px)",
         boxShadow: "0 0 50px rgba(0,229,255,0.14), 0 0 100px rgba(0,188,212,0.08), 0 8px 40px rgba(0,0,0,0.65), inset 0 1px 0 rgba(0,229,255,0.10)",
       }}>
-        {/* Header */}
+        {/* Header with stats */}
+        <div style={{ position:"relative" }}>
+          <div style={{ position:"absolute", top:0, left:0, right:0, height:"1px", zIndex:5,
+            background:"linear-gradient(90deg,transparent,rgba(0,229,255,0.60),rgba(160,255,250,0.40),rgba(0,229,255,0.60),transparent)" }} />
+          {/* Coverage stats bar */}
+          <div style={{ padding:"10px 16px 8px", borderBottom:"1px solid rgba(0,229,255,0.06)",
+            background:"rgba(0,15,28,0.70)", display:"flex", alignItems:"center", gap:"24px" }}>
+            <div>
+              <div style={{ fontSize:"18px", fontWeight:800,
+                background:"linear-gradient(135deg,#00e5ff,#00bcd4)",
+                WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+                {withCoords.length}
+              </div>
+              <div style={{ fontSize:"10px", color:"rgba(0,229,255,0.45)", fontWeight:500, marginTop:1 }}>Locations Mapped</div>
+            </div>
+            <div style={{ width:1, height:32, background:"rgba(0,229,255,0.10)" }} />
+            <div>
+              <div style={{ fontSize:"18px", fontWeight:800, color:"rgba(102,187,106,0.90)" }}>
+                {savedResults.filter(r => r.result?.sourceBucket === "posted_price").length}
+              </div>
+              <div style={{ fontSize:"10px", color:"rgba(102,187,106,0.45)", fontWeight:500, marginTop:1 }}>Posted Prices</div>
+            </div>
+            <div style={{ width:1, height:32, background:"rgba(0,229,255,0.10)" }} />
+            <div>
+              <div style={{ fontSize:"18px", fontWeight:800, color:"rgba(251,191,36,0.85)" }}>
+                {savedResults.filter(r => r.result?.postedPrice).length > 0
+                  ? `$${Math.round(savedResults.filter(r => r.result?.postedPrice).reduce((s,r) => { const p = parseFloat(String(r.result?.postedPrice || "0").replace(/[^0-9.]/g,"")); return s + (isNaN(p) ? 0 : p); }, 0) / Math.max(1, savedResults.filter(r => r.result?.postedPrice).length))}` : "—"}
+              </div>
+              <div style={{ fontSize:"10px", color:"rgba(251,191,36,0.45)", fontWeight:500, marginTop:1 }}>Avg Price</div>
+            </div>
+            <div style={{ marginLeft:"auto", fontSize:"11px", fontWeight:700,
+              background:"linear-gradient(135deg,#e0ffff,#00e5ff)",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+              Coverage Intelligence
+            </div>
+          </div>
+        </div>
+
         <div style={{
           padding: "12px 16px 10px", display:"flex", alignItems:"center", gap:"10px",
           borderBottom: "1px solid rgba(0,229,255,0.10)",
           background: "rgba(0,20,32,0.50)",
         }}>
-          {/* Top edge glow */}
-          <div style={{ position:"absolute", top:0, left:0, right:0, height:"1px", background:"linear-gradient(90deg,transparent,rgba(0,229,255,0.50),rgba(160,255,250,0.30),rgba(0,229,255,0.50),transparent)", pointerEvents:"none" }} />
           <MapPin style={{ width:14, height:14, color:"rgba(0,229,255,0.75)" }} />
           <span style={{ fontSize:"12px", fontWeight:700,
             background:"linear-gradient(135deg,#e0ffff,#00e5ff,#00bcd4)",
