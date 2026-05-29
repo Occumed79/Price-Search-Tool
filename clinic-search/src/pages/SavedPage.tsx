@@ -375,23 +375,66 @@ export default function SavedPage() {
         )}
       </AnimatePresence>
 
-      {/* Map */}
-      <div className="glass-card rounded-2xl overflow-hidden border border-white/[0.06] mb-6">
-        <div className="px-4 pt-3 pb-1 border-b border-white/[0.04] flex items-center gap-2">
-          <MapPin className="w-3.5 h-3.5 text-cyan-400/60" />
-          <span className="text-xs font-medium text-white/50">Clinic Locations Map</span>
-          <span className="text-[10px] text-white/25 ml-2">{withCoords.length} pinned</span>
-          <div className="ml-auto flex items-center gap-1">
-            <button onClick={() => setMapZoom(z => Math.min(z + 0.8, 8))} className="p-1 rounded text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-colors"><ZoomIn className="w-3.5 h-3.5" /></button>
-            <button onClick={() => setMapZoom(z => Math.max(z - 0.8, 0.8))} className="p-1 rounded text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-colors"><ZoomOut className="w-3.5 h-3.5" /></button>
-            <button onClick={() => setMapZoom(1)} className="p-1 rounded text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-colors"><RotateCcw className="w-3 h-3" /></button>
+      {/* Map — luminous teal glass */}
+      <div className="mb-6" style={{
+        borderRadius: "20px", overflow: "hidden",
+        border: "1px solid rgba(0,229,255,0.22)",
+        background: "rgba(2,14,24,0.80)",
+        backdropFilter: "blur(24px)",
+        boxShadow: "0 0 50px rgba(0,229,255,0.14), 0 0 100px rgba(0,188,212,0.08), 0 8px 40px rgba(0,0,0,0.65), inset 0 1px 0 rgba(0,229,255,0.10)",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "12px 16px 10px", display:"flex", alignItems:"center", gap:"10px",
+          borderBottom: "1px solid rgba(0,229,255,0.10)",
+          background: "rgba(0,20,32,0.50)",
+        }}>
+          {/* Top edge glow */}
+          <div style={{ position:"absolute", top:0, left:0, right:0, height:"1px", background:"linear-gradient(90deg,transparent,rgba(0,229,255,0.50),rgba(160,255,250,0.30),rgba(0,229,255,0.50),transparent)", pointerEvents:"none" }} />
+          <MapPin style={{ width:14, height:14, color:"rgba(0,229,255,0.75)" }} />
+          <span style={{ fontSize:"12px", fontWeight:700,
+            background:"linear-gradient(135deg,#e0ffff,#00e5ff,#00bcd4)",
+            WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+            Clinic Locations Map
+          </span>
+          <span style={{ fontSize:"10px", color:"rgba(0,229,255,0.45)", fontWeight:500,
+            background:"rgba(0,229,255,0.08)", border:"1px solid rgba(0,229,255,0.18)",
+            padding:"1px 8px", borderRadius:"20px", marginLeft:2 }}>
+            {withCoords.length} pinned
+          </span>
+          <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:"4px" }}>
+            {[
+              { label:"+", action: () => setMapZoom((z: number) => Math.min(z + 0.8, 8)), icon: <ZoomIn style={{ width:13, height:13 }} /> },
+              { label:"−", action: () => setMapZoom((z: number) => Math.max(z - 0.8, 0.8)), icon: <ZoomOut style={{ width:13, height:13 }} /> },
+              { label:"⟳", action: () => setMapZoom(1), icon: <RotateCcw style={{ width:12, height:12 }} /> },
+            ].map((btn, i) => (
+              <button key={i} onClick={btn.action} style={{
+                padding:"4px 7px", borderRadius:"7px", border:"1px solid rgba(0,229,255,0.16)",
+                background:"rgba(0,229,255,0.06)", color:"rgba(0,229,255,0.60)", cursor:"pointer",
+                display:"flex", alignItems:"center", transition:"all 0.2s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background="rgba(0,229,255,0.14)"; e.currentTarget.style.borderColor="rgba(0,229,255,0.35)"; e.currentTarget.style.color="rgba(0,229,255,0.95)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background="rgba(0,229,255,0.06)"; e.currentTarget.style.borderColor="rgba(0,229,255,0.16)"; e.currentTarget.style.color="rgba(0,229,255,0.60)"; }}
+              >
+                {btn.icon}
+              </button>
+            ))}
           </div>
         </div>
-        <div className="relative" style={{ height: 340 }}>
+
+        {/* Map canvas — bigger */}
+        <div style={{ position:"relative", height:440, background:"rgba(1,12,20,0.90)" }}>
           {withCoords.length === 0 && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-              <MapPin className="w-8 h-8 text-white/10 mb-2" />
-              <p className="text-xs text-white/25 text-center px-8">Save a result to pin it here.<br /><span className="text-white/15">Coordinates are geocoded automatically on save.</span></p>
+            <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", zIndex:10, pointerEvents:"none" }}>
+              <div style={{ width:64, height:64, borderRadius:"50%", marginBottom:16,
+                background:"radial-gradient(circle at center, rgba(0,229,255,0.18) 0%, transparent 70%)",
+                display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <MapPin style={{ width:28, height:28, color:"rgba(0,229,255,0.25)" }} />
+              </div>
+              <p style={{ fontSize:12, color:"rgba(0,229,255,0.30)", textAlign:"center", lineHeight:1.6 }}>
+                Save a result to pin it here.<br />
+                <span style={{ color:"rgba(0,229,255,0.15)", fontSize:11 }}>Coordinates geocoded automatically on save.</span>
+              </p>
             </div>
           )}
           <ComposableMap projection="geoAlbersUsa" style={{ width: "100%", height: "100%" }}>
@@ -400,8 +443,14 @@ export default function SavedPage() {
                 {({ geographies }: { geographies: Array<{ rsmKey: string }> }) =>
                   geographies.map(geo => (
                     <Geography key={geo.rsmKey} geography={geo}
-                      fill="rgba(22, 33, 52, 0.9)" stroke="rgba(100, 116, 139, 0.2)" strokeWidth={0.5}
-                      style={{ default: { outline: "none" }, hover: { fill: "rgba(30, 45, 68, 0.95)", outline: "none" }, pressed: { outline: "none" } }}
+                      fill="rgba(0,20,35,0.92)"
+                      stroke="rgba(0,229,255,0.18)"
+                      strokeWidth={0.6}
+                      style={{
+                        default: { outline: "none" },
+                        hover: { fill: "rgba(0,40,60,0.95)", stroke:"rgba(0,229,255,0.40)", outline: "none" },
+                        pressed: { outline: "none" }
+                      }}
                     />
                   ))
                 }
@@ -416,16 +465,25 @@ export default function SavedPage() {
                     onClick={() => openEvidence(result)}
                     onMouseEnter={() => setHoveredId(saved.id)}
                     onMouseLeave={() => setHoveredId(null)}>
+                    {/* Outer pulse ring */}
                     {result.sourceBucket === "posted_price" && (
-                      <circle r={isHovered ? 13 : 10} fill="none" stroke={color}
-                        strokeWidth={isSelected ? 2 : 1} strokeOpacity={isSelected ? 0.6 : 0.3}
+                      <circle r={isHovered ? 16 : 12} fill="none" stroke={color}
+                        strokeWidth={isSelected ? 2.5 : 1.5} strokeOpacity={isSelected ? 0.7 : 0.35}
                         style={{ pointerEvents: "none", transition: "r 0.15s" }} />
                     )}
-                    <circle r={isHovered ? 7 : 5} fill={color} fillOpacity={isHovered ? 1 : 0.85}
-                      stroke={isSelected ? "#22d3ee" : "rgba(0,0,0,0.4)"} strokeWidth={isSelected ? 2 : 1}
-                      style={{ cursor: "pointer", transition: "r 0.15s, fill-opacity 0.15s" }} />
+                    {/* Glow halo */}
+                    <circle r={isHovered ? 12 : 8} fill={color} fillOpacity={0.12}
+                      stroke="none" style={{ pointerEvents:"none", transition:"r 0.15s" }} />
+                    {/* Core pin */}
+                    <circle r={isHovered ? 7 : 5} fill={color} fillOpacity={isHovered ? 1 : 0.88}
+                      stroke={isSelected ? "#00e5ff" : "rgba(0,0,0,0.5)"} strokeWidth={isSelected ? 2 : 1}
+                      style={{ cursor: "pointer", transition: "r 0.15s, fill-opacity 0.15s",
+                        filter: isHovered ? `drop-shadow(0 0 6px ${color})` : "none" }} />
                     {isHovered && (
-                      <text textAnchor="middle" y={-14} style={{ fontSize: "9px", fill: "#ffffff", fontWeight: 700, pointerEvents: "none", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
+                      <text textAnchor="middle" y={-18} style={{
+                        fontSize: "10px", fill: "#00e5ff", fontWeight: 700,
+                        pointerEvents: "none", textShadow: "0 1px 4px rgba(0,0,0,0.9)"
+                      }}>
                         {result.postedPrice || result.clinicName?.split(" ").slice(0, 2).join(" ")}
                       </text>
                     )}
@@ -435,14 +493,17 @@ export default function SavedPage() {
             </ZoomableGroup>
           </ComposableMap>
         </div>
-        <div className="px-4 py-2 border-t border-white/[0.04] flex items-center gap-4">
+
+        {/* Legend */}
+        <div style={{ padding:"10px 16px", borderTop:"1px solid rgba(0,229,255,0.08)", display:"flex", alignItems:"center", gap:"16px", background:"rgba(0,12,22,0.60)" }}>
           {Object.entries({ posted_price: "Posted Price", clinic_no_price: "No Price", possible_match: "Possible Match" }).map(([key, label]) => (
-            <div key={key} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: bucketColors[key] }} />
-              <span className="text-[10px] text-white/30">{label}</span>
+            <div key={key} style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+              <div style={{ width:10, height:10, borderRadius:"50%", backgroundColor:bucketColors[key],
+                boxShadow:`0 0 6px ${bucketColors[key]}` }} />
+              <span style={{ fontSize:10, color:"rgba(0,229,255,0.40)", fontWeight:500 }}>{label}</span>
             </div>
           ))}
-          <span className="text-[10px] text-white/20 ml-auto">Scroll to zoom · Drag to pan · Click pin for details</span>
+          <span style={{ fontSize:10, color:"rgba(0,229,255,0.20)", marginLeft:"auto" }}>Scroll to zoom · Drag to pan · Click pin for details</span>
         </div>
       </div>
 
