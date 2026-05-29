@@ -173,18 +173,18 @@
    TOOL PAGES — existing dark glass (unchanged)
 ───────────────────────────────────────────────────────────────── */
 .glass {
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: rgba(2, 18, 28, 0.72);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid rgba(0, 188, 212, 0.14);
 }
 
 .glass-card {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: rgba(2, 18, 28, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 188, 212, 0.18);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0,229,255,0.04) inset, inset 0 1px 0 rgba(0,229,255,0.08);
 }
 
 .glass-sidebar {
@@ -195,10 +195,10 @@
 }
 
 .glass-input {
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(2, 20, 32, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 188, 212, 0.22);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -214,8 +214,8 @@
 
 .atmo-bg {
   background:
-    radial-gradient(ellipse at 20% 10%, rgba(0, 188, 212, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 90%, rgba(38, 166, 154, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 10%, rgba(0, 188, 212, 0.14) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(38, 166, 154, 0.12) 0%, transparent 50%),
     hsl(200 80% 5%);
 }
 
@@ -292,13 +292,13 @@
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,
-    rgba(0, 229, 255, 0.28) 0%,
-    rgba(0, 188, 212, 0.18) 18%,
-    rgba(0, 150, 136, 0.10) 36%,
-    rgba(56, 142, 60,  0.05) 55%,
+    rgba(0, 229, 255, 0.55) 0%,
+    rgba(0, 188, 212, 0.35) 18%,
+    rgba(0, 150, 136, 0.18) 36%,
+    rgba(56, 142, 60,  0.09) 55%,
     transparent 72%
   );
-  filter: blur(55px);
+  filter: blur(40px);
   animation: orbPulse 9s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
@@ -398,13 +398,13 @@
 .hub-card {
   background: linear-gradient(
     160deg,
-    rgba(0, 229, 255, 0.07) 0%,
-    rgba(0, 150, 136, 0.05) 40%,
-    rgba(2,  20,  25, 0.12) 100%
+    rgba(0, 229, 255, 0.11) 0%,
+    rgba(0, 150, 136, 0.09) 40%,
+    rgba(2,  20,  28, 0.18) 100%
   );
   backdrop-filter: blur(32px) saturate(160%) brightness(1.06);
   -webkit-backdrop-filter: blur(32px) saturate(160%) brightness(1.06);
-  border: 1px solid rgba(0, 229, 255, 0.15);
+  border: 1px solid rgba(0, 229, 255, 0.22);
   box-shadow:
     0 2px 0 rgba(0,229,255,0.08) inset,
     0 -1px 0 rgba(0,0,0,0.55) inset,
@@ -419,20 +419,21 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(0,229,255,0.07) 0%, transparent 55%);
+  background: linear-gradient(135deg, rgba(0,229,255,0.18) 0%, rgba(0,188,212,0.08) 50%, transparent 75%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
 
 .hub-card-active:hover {
-  border-color: rgba(0, 229, 255, 0.35);
+  border-color: rgba(0, 229, 255, 0.65);
   box-shadow:
-    0 2px 0 rgba(0,229,255,0.12) inset,
+    0 2px 0 rgba(0,229,255,0.25) inset,
     0 -1px 0 rgba(0,0,0,0.55) inset,
-    0 20px 56px rgba(0,0,0,0.70),
-    0 0 32px rgba(0,200,200,0.12);
-  transform: translateY(-3px);
+    0 20px 60px rgba(0,0,0,0.70),
+    0 0 50px rgba(0,229,255,0.28),
+    0 0 100px rgba(0,188,212,0.14);
+  transform: translateY(-5px) scale(1.01);
 }
 .hub-card-active:hover::before { opacity: 1; }
 .hub-card-inactive { opacity: 0.42; filter: grayscale(0.4); }
