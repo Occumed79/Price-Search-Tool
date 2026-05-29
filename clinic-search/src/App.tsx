@@ -19,6 +19,7 @@ const queryClient = new QueryClient({
 });
 
 const FULL_BLEED_ROUTES = ["/network-map"];
+const SELF_NAV_ROUTES = ["/report"]; // these pages have their own internal navbar
 
 // ── Teal-Cyan floating orb background for inner portal pages ──────────────────
 function PortalTealBackground() {
@@ -108,7 +109,7 @@ function Layout() {
       {!isFullBleed && <PortalTealBackground />}
 
       {/* Navbar on portal pages */}
-      {!isFullBleed && !isHub && <NavBar />}
+      {!isFullBleed && !isHub && !SELF_NAV_ROUTES.some(r => location.startsWith(r)) && <NavBar />}
 
       <main
         className={isFullBleed ? "flex-1 flex flex-col" : "flex-1"}
