@@ -20,6 +20,7 @@ import { runSearch } from "../services/searchPipeline";
 import { logger } from "../lib/logger";
 
 const router = Router();
+const NEGATIVE_DOMAIN_REVIEW_THRESHOLD = 2;
 
 function hasLiveSearchProviderConfig(): boolean {
   return Boolean(
@@ -61,6 +62,10 @@ async function ensureDomainRule(domain: string, ruleType: string, reason: string
   return rule;
 }
 
+function isNegativeReviewVerdict(verdict: string): boolean {
+  return verdict === "wrong_match" || verdict === "no_longer_posted";
+}
+
 function feedbackRuleForVerdict(verdict: string): { ruleType: "prefer" | "block"; reason: string } | null {
   switch (verdict) {
     case "verified":
@@ -68,19 +73,24 @@ function feedbackRuleForVerdict(verdict: string): { ruleType: "prefer" | "block"
         ruleType: "prefer",
         reason: "Automatically preferred after manual review marked a result as verified.",
       };
-    case "wrong_match":
-      return {
-        ruleType: "block",
-        reason: "Automatically blocked after manual review marked a result as a wrong match.",
-      };
-    case "no_longer_posted":
-      return {
-        ruleType: "block",
-        reason: "Automatically blocked after manual review marked a result as no longer posted.",
-      };
     default:
       return null;
   }
+}
+
+async function countNegativeReviewsForDomain(domain: string): Promise<number> {
+  const reviewedRows = await db
+    .select({
+      verdict: manualReviewsTable.verdict,
+      sourceUrl: priceResultsTable.sourceUrl,
+    })
+    .from(manualReviewsTable)
+    .innerJoin(priceResultsTable, eq(manualReviewsTable.resultId, priceResultsTable.id));
+
+  return reviewedRows.filter((row) => {
+    const rowDomain = getDomainFromUrl(row.sourceUrl);
+    return rowDomain === domain && isNegativeReviewVerdict(row.verdict);
+  }).length;
 }
 
 router.post("/search", async (req, res) => {
@@ -441,6 +451,21 @@ router.post("/manual-review", async (req, res) => {
       ruleType: rule.ruleType,
       reason: rule.reason,
     };
+  } else if (domain && isNegativeReviewVerdict(parsed.data.verdict)) {
+    const negativeCount = await countNegativeReviewsForDomain(domain);
+    if (negativeCount >= NEGATIVE_DOMAIN_REVIEW_THRESHOLD) {
+      const rule = await ensureDomainRule(
+        domain,
+        "block",
+        `Automatically blocked after ${negativeCount} negative manual reviews for this domain.`,
+      );
+      domainRuleApplied = {
+        id: rule.id,
+        domain: rule.domain,
+        ruleType: rule.ruleType,
+        reason: rule.reason,
+      };
+    }
   }
 
   res.json({
