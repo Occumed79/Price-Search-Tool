@@ -21,6 +21,20 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 
+function hasLiveSearchProviderConfig(): boolean {
+  return Boolean(
+    process.env.SERPER_API_KEY ||
+      process.env.TAVILY_API_KEY ||
+      process.env.EXA_API_KEY ||
+      (process.env.BROWSE_AI_API_KEY && process.env.BROWSE_AI_SEARCH_URL) ||
+      (process.env.BROWSER_USE_API_KEY && process.env.BROWSER_USE_SEARCH_URL) ||
+      (process.env.OLOSTEP_API_KEY && process.env.OLOSTEP_SEARCH_URL) ||
+      (process.env.CLOD_API_KEY && process.env.CLOD_SEARCH_URL) ||
+      process.env.LANSEARCH_API_KEY ||
+      process.env.JINA_API_KEY,
+  );
+}
+
 router.post("/search", async (req, res) => {
   const parsed = StartSearchBody.safeParse(req.body);
   if (!parsed.success) {
@@ -28,6 +42,15 @@ router.post("/search", async (req, res) => {
     return;
   }
   const body = parsed.data;
+
+  if (!hasLiveSearchProviderConfig()) {
+    res.status(503).json({
+      error: "Search provider not configured",
+      message:
+        "No live search provider API key is configured. Demo price results are disabled, so this search was not run.",
+    });
+    return;
+  }
 
   const [run] = await db
     .insert(searchRunsTable)
@@ -607,4 +630,3 @@ router.get("/results/:searchId/map", async (req, res) => {
 });
 
 export default router;
-
