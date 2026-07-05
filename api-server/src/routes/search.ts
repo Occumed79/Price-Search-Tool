@@ -35,6 +35,54 @@ function hasLiveSearchProviderConfig(): boolean {
   );
 }
 
+function getDomainFromUrl(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+async function ensureDomainRule(domain: string, ruleType: string, reason: string) {
+  const existingRules = await db
+    .select()
+    .from(domainRulesTable)
+    .where(eq(domainRulesTable.domain, domain));
+
+  const existing = existingRules.find((rule) => rule.ruleType === ruleType);
+  if (existing) return existing;
+
+  const [rule] = await db
+    .insert(domainRulesTable)
+    .values({ domain, ruleType, reason })
+    .returning();
+
+  return rule;
+}
+
+function feedbackRuleForVerdict(verdict: string): { ruleType: "prefer" | "block"; reason: string } | null {
+  switch (verdict) {
+    case "verified":
+      return {
+        ruleType: "prefer",
+        reason: "Automatically preferred after manual review marked a result as verified.",
+      };
+    case "wrong_match":
+      return {
+        ruleType: "block",
+        reason: "Automatically blocked after manual review marked a result as a wrong match.",
+      };
+    case "no_longer_posted":
+      return {
+        ruleType: "block",
+        reason: "Automatically blocked after manual review marked a result as no longer posted.",
+      };
+    default:
+      return null;
+  }
+}
+
 router.post("/search", async (req, res) => {
   const parsed = StartSearchBody.safeParse(req.body);
   if (!parsed.success) {
@@ -361,6 +409,12 @@ router.post("/manual-review", async (req, res) => {
     return;
   }
 
+  const [reviewedResult] = await db
+    .select()
+    .from(priceResultsTable)
+    .where(eq(priceResultsTable.id, parsed.data.resultId))
+    .limit(1);
+
   await db
     .update(priceResultsTable)
     .set({ userReview: parsed.data.verdict })
@@ -375,12 +429,27 @@ router.post("/manual-review", async (req, res) => {
     })
     .returning();
 
+  let domainRuleApplied: { id: number; domain: string; ruleType: string; reason: string | null } | null = null;
+  const domain = getDomainFromUrl(reviewedResult?.sourceUrl);
+  const feedbackRule = feedbackRuleForVerdict(parsed.data.verdict);
+
+  if (domain && feedbackRule) {
+    const rule = await ensureDomainRule(domain, feedbackRule.ruleType, feedbackRule.reason);
+    domainRuleApplied = {
+      id: rule.id,
+      domain: rule.domain,
+      ruleType: rule.ruleType,
+      reason: rule.reason,
+    };
+  }
+
   res.json({
     id: review.id,
     resultId: review.resultId,
     verdict: review.verdict,
     notes: review.notes,
     reviewedAt: review.reviewedAt.toISOString(),
+    domainRuleApplied,
   });
 });
 
