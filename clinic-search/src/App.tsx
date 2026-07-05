@@ -8,7 +8,6 @@ import SearchPage from "@/pages/SearchPage";
 import SavedPage from "@/pages/SavedPage";
 import SearchesPage from "@/pages/SearchesPage";
 import SettingsPage from "@/pages/SettingsPage";
-import NetworkMapPage from "@/pages/NetworkMapPage";
 import ReportPage from "@/pages/ReportPage";
 import SharedToolsPage from "@/pages/SharedToolsPage";
 import NavBar from "@/components/NavBar";
@@ -18,7 +17,6 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
 });
 
-const FULL_BLEED_ROUTES = ["/network-map"];
 const SELF_NAV_ROUTES = ["/report"]; // these pages have their own internal navbar
 
 // ── Teal-Cyan floating orb background for inner portal pages ──────────────────
@@ -98,7 +96,6 @@ function PortalTealBackground() {
 function Layout() {
   const [location] = useLocation();
   const isHub = location === "/";
-  const isFullBleed = FULL_BLEED_ROUTES.some(r => location.startsWith(r));
 
   return (
     <div
@@ -106,13 +103,13 @@ function Layout() {
       style={{ position: "relative", isolation: "isolate" }}
     >
       {/* Teal glow on ALL pages including hub */}
-      {!isFullBleed && <PortalTealBackground />}
+      <PortalTealBackground />
 
       {/* Navbar on portal pages */}
-      {!isFullBleed && !isHub && !SELF_NAV_ROUTES.some(r => location.startsWith(r)) && <NavBar />}
+      {!isHub && !SELF_NAV_ROUTES.some(r => location.startsWith(r)) && <NavBar />}
 
       <main
-        className={isFullBleed ? "flex-1 flex flex-col" : "flex-1"}
+        className="flex-1"
         style={{ position: "relative", zIndex: 10 }}
       >
         <Switch>
@@ -121,7 +118,6 @@ function Layout() {
           <Route path="/saved" component={SavedPage} />
           <Route path="/searches" component={SearchesPage} />
           <Route path="/settings" component={SettingsPage} />
-          <Route path="/network-map" component={NetworkMapPage} />
           <Route path="/report" component={ReportPage} />
           <Route path="/shared-tools" component={SharedToolsPage} />
           <Route component={NotFound} />
