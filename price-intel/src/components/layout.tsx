@@ -15,7 +15,7 @@ const PORTALS = [
   { id: 1, name: "Network Search",        subtitle: "US Self-Pay Search",     href: `${HUB_URL}/search`,      active: false },
   { id: 2, name: "Network Map",           subtitle: "Geographic Coverage",    href: `${HUB_URL}/network-map`, active: false },
   { id: 3, name: "Provider Acquisition",  subtitle: "Provider Registry",      href: "#",                       active: false },
-  { id: 4, name: "Report Generator",      subtitle: "Analytics & Reports",    href: `${HUB_URL}/report`,      active: false },
+  { id: 4, name: "Pricing Agreement Generator", subtitle: "Agreements & Pricing", href: "https://pricing-agreement-generator.onrender.com", active: false },
   { id: 5, name: "Global Intelligence",   subtitle: "International Search",   href: "/",                       active: true  },
   { id: 6, name: "Pricing Transparency",  subtitle: "Transparency DB",        href: "#",                       active: false },
 ];
