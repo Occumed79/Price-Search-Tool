@@ -38,6 +38,7 @@ const PHOTOS: Record<string, string> = {
 const MAP_URL = "https://network-map-tool.onrender.com";
 const INTL_URL = "https://international-search.onrender.com";
 const FORMS_URL = "https://occu-med-forms-frontend.onrender.com";
+const PRICING_AGREEMENT_URL = "https://pricing-agreement-generator.onrender.com";
 
 // ── Portal definitions ────────────────────────────────────────────────────────
 type Portal = {
@@ -56,7 +57,7 @@ const STATIC_PORTALS: Portal[] = [
   { id: "network-search", label: "Network Search", description: "Search posted prices across clinics, urgent care, labs, and more — anywhere in the country.", href: "/search", external: false, comingSoon: false },
   { id: "network-map", label: "Network Map", description: "Visualize provider coverage and geographic distribution across all regions.", href: MAP_URL, external: true, comingSoon: false },
   { id: "provider-acquisition", label: "Provider Acquisition", description: "Browse and manage the full network of Occu-Med affiliated providers.", href: FORMS_URL, external: true, comingSoon: false },
-  { id: "report-generator", label: "Report Generator", description: "Generate utilization, cost trend, and network performance reports on demand.", href: "/report", external: false, comingSoon: false, linkable: true },
+  { id: "report-generator", label: "Pricing Agreement Generator", description: "Create and manage pricing agreements for providers and network partners.", href: PRICING_AGREEMENT_URL, external: true, comingSoon: false },
   { id: "international-search", label: "International Search", description: "Extend your search globally — find providers and pricing across international networks.", href: INTL_URL, external: true, comingSoon: false },
   { id: "pricing-transparency", label: "Pricing Transparency Database", description: "Access and compare self-pay and posted pricing data across the full provider network.", href: "#", external: false, comingSoon: false, linkable: true },
 ];
